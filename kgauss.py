@@ -31,11 +31,7 @@ def ngauss(mu, sigma, n=1):
         if i < n:
             data[i] = mu + sigma * np.sqrt(-2 * np.log(u)) * np.sin(2 * pi * v)
             i += 1
-
     return data
-
-#plt.hist(ngauss(100, 10, 100000), bins = 50)
-#plt.show()
 
 """
 k distributions
@@ -82,8 +78,18 @@ def pdf(data, bins, name):
 def cdf(data, name):
     plt.xlabel(name)
     plt.ylabel('cumulative probability')
-    plt.title('Cumulative Distribution Function')
-    # need to fill in code here
+    plt.title('Cumulative Probability Function')
+    sorted_data = np.sort(data)
+    plot_data = np.empty((2, sorted_data.size))
+    num_entries = 0
+    for i in xrange(sorted_data.size):
+        num_entries += 1
+        plot_data[0][i] = sorted_data[i]
+        print plot_data[0][i]
+        plot_data[1][i] = num_entries
+    for i in xrange(plot_data[1].size):
+        plot_data[1][i] /= num_entries
+    plt.plot(plot_data[0], plot_data[1])
     plt.show()
 
 def main():
@@ -96,7 +102,7 @@ def main():
     print normaltest(kg[0])
     scatterPlot(kg)
     # pdf(kg[0], 40, 'x-coordinates')
-    cdf(kg[0], 100, 'x-coordinates')
+    cdf(kg[0], 'x-coordinates')
     
 if __name__ == "__main__":
     main()
