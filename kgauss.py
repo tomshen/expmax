@@ -42,7 +42,7 @@ scale * lower <= sigma < scale * upper
 
 returns a list of point tuples
 """
-def kgauss(k, n, dim=2, lower=0, upper=100, scale=0.1):
+def kgauss(k, n, dim=2, lower=-90, upper=90, scale=0.1):
     data = np.empty((dim, k * n))
     index = 0
     for i in xrange(k):
@@ -95,14 +95,14 @@ def cdf(data, name):
 def main():
     filename = 'temp.txt'
 
-    kg = kgauss(2, 100, lower=-100, upper=100)
-    exportFile(filename, kg)
+    #kg = kgauss(2, 100, lower=-90, upper=90)
+    #exportFile(filename, kg)
     kg = importFile(filename)
 
-    print normaltest(kg[0])
+    #print normaltest(kg[0])
     scatterPlot(kg)
     # pdf(kg[0], 40, 'x-coordinates')
-    cdf(kg[0], 'x-coordinates')
+    #cdf(kg[0], 'x-coordinates')
     
 if __name__ == "__main__":
     main()
