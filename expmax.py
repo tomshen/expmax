@@ -8,35 +8,40 @@ from scipy.stats import norm
 import numpy as np
 from kgauss import importFile
 
-def expectation_maximization(data, k=2, dim=2, num_points=200):
-    h = tuple([[0 for i in xrange(k)]  for i in xrange(dim)])
-    sigma = 5
-    h_old = tuple([tuple([90 for i in xrange(k)]) for i in xrange(dim)])
+def multi_expectation_maximization(data, dim=2, k=2):
+    h = []
+    for d in xrange(dim):
+        h.append(expectation_maximization(data[d], k, sigma=5))
+    return h
+
+def expectation_maximization(data, k=2, sigma=5):
+    num_points = data.size
+    h = [0 for i in xrange(k)]
+    h_old = None
     while fabs(compare_hypothesis(h, h_old)) > 0.01:
-        h_old = h
-        h_new = [[0 for i in xrange(k)] for i in xrange(dim)]
-        expected_values = np.empty((dim, k, num_points))
-        for d in xrange(dim):
-            for i in xrange(num_points):
-                for j in xrange(k):
-                    point = data[d][i]
-                    expected_values[d][j][i] = expected_value_point(point, h[d][j], h[d], sigma)
+        h_new = [0 for j in xrange(k)]
+        expected_values = np.empty((k, num_points))
+        for i in xrange(num_points):
             for j in xrange(k):
-                mu_num = 0
-                mu_denom = 0
-                for l in xrange(num_points):
-                    mu_num += expected_values[d][j][l] * data[d][l]
-                    mu_denom += expected_values[d][j][l]
-                h_new[d][j] = mu_num / mu_denom
-                print j, h_new[d][j]
-    return tuple([tuple(h_new[d]) for d in xrange(dim)])
+                point = data[i]
+                expected_values[j][i] = expected_value_point(point, h[j], h, sigma)
+        for j in xrange(k):
+            mu_num = 0
+            mu_denom = 0
+            for i in xrange(num_points):
+                mu_num += expected_values[j][i] * data[i]
+                mu_denom += expected_values[j][i]
+            h_new[j] = mu_num / mu_denom
+        h_old = h
+        h = h_new
+    return tuple(h)
 
 def compare_hypothesis(h, h_old):
-    assert len(h) == len(h_old)
+    if not h_old:
+        return 100
     diff = 0
     for i in xrange(len(h)):
-        for j in xrange(len(h[0])):
-            diff += h[i][j] - h_old[i][j]
+        diff += h[i] - h_old[i]
     return diff
 
 def expected_value_point(point, mu, h, sigma):
@@ -51,4 +56,4 @@ def prob_point_gauss(point, mu, sigma):
     return gauss_dist.pdf(point)
 
 data = importFile('temp.txt')
-print expectation_maximization(data)
+print multi_expectation_maximization(data)
