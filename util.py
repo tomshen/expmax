@@ -16,3 +16,12 @@ def exportFile(filename, data):
 
 def importFile(filename):
     return np.genfromtxt(filename)
+
+def timed(fn):
+    def wrapped(*args, **kwargs):
+        res = None
+        with Timer() as t:
+            res = fn(*args, **kwargs)
+        print fn.__name__ + ' took %.03f seconds.' % t.interval
+        return res
+    return wrapped

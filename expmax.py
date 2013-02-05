@@ -8,7 +8,7 @@ from random import randint
 from scipy.stats import norm
 import numpy as np
 from kgauss import kgauss
-from util import Timer, importFile, exportFile
+from util import timed, importFile, exportFile
 
 def multi_expectation_maximization(data, dim=2, k=2, sigma=3):
     if dim == 1:
@@ -76,14 +76,16 @@ def calculate_hypothesis(k, data, expected_values):
         h.append(mu_num / mu_denom)
     return h
 
+@timed
+def test(data):
+    for i in xrange(10):
+        print multi_expectation_maximization(data, dim=2, k=2, sigma=3)
+
 def main():
     #data = kgauss(2, 100, dim=1, lower=-90, upper=90, sigma=3)
     #exportFile('temp.txt', data)
     data = importFile('temp.txt')
-    with Timer() as t:
-        for i in xrange(10):
-            print multi_expectation_maximization(data, dim=1, k=2, sigma=3)
-    print('Request took %.03f sec.' % t.interval)
+    test(data)
 
 if __name__ == "__main__":
     main()
