@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 from scipy.stats import normaltest
+from util import importFile, exportFile
 
 """
 My implementation of a Gaussian distribution generator, based on the 
@@ -42,24 +43,19 @@ scale * lower <= sigma < scale * upper
 
 returns a list of point tuples
 """
-def kgauss(k, n, dim=2, lower=-90, upper=90, scale=0.1):
+def kgauss(k, n, dim=2, lower=-90, upper=90, sigma=3):
     data = np.empty((dim, k * n))
     index = 0
     for i in xrange(k):
         mu = random() * (upper - lower) + lower
-        sigma = random() * scale * (upper - lower) + scale * lower
+        print mu
         for j in xrange(n):
             for d in xrange(dim):
                 data[d][index] = ngauss(mu, sigma)
             index += 1
     return data
 
-def exportFile(filename, data):
-    np.savetxt(filename, data)
-    return filename
 
-def importFile(filename):
-    return np.genfromtxt(filename)
 
 def scatterPlot(data):
     plt.xlabel('x-coordinates')
@@ -102,7 +98,7 @@ def main():
     #print normaltest(kg[0])
     scatterPlot(kg)
     # pdf(kg[0], 40, 'x-coordinates')
-    cdf(kg[0], 'x-coordinates')
+    # cdf(kg[0], 'x-coordinates')
     
 if __name__ == "__main__":
     main()
