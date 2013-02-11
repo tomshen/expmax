@@ -39,7 +39,6 @@ k distributions
 n points of data each
 dim dimensional points
 lower <= mu < upper
-scale * lower <= sigma < scale * upper
 
 returns a list of point tuples
 """
@@ -67,6 +66,22 @@ def kgauss_with_mus(k, n, dim=2, lower=-90, upper=90, sigma=3):
                 data[d][index] = ngauss(mu, sigma)
             index += 1
     return data, mus
+# random sigma somewhere between 0 and 2 * sigma
+def kgauss_with_mus_sigmas(k, n, dim=2, lower=-90, upper=90, sigma=10):
+    data = np.empty((dim, k * n))
+    index = 0
+    mus = []
+    sigmas = []
+    for i in xrange(k):
+        mu = random() * (upper - lower) + lower
+        mus.append(mu)
+        sigma = random() * sigma + sigma
+        sigmas.append(sigma)
+        for j in xrange(n):
+            for d in xrange(dim):
+                data[d][index] = ngauss(mu, sigma)
+            index += 1
+    return data, mus, sigmas
 
 def scatterPlot(data):
     plt.xlabel('x-coordinates')
