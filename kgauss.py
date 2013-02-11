@@ -55,7 +55,18 @@ def kgauss(k, n, dim=2, lower=-90, upper=90, sigma=3):
             index += 1
     return data
 
-
+def kgauss_with_mus(k, n, dim=2, lower=-90, upper=90, sigma=3):
+    data = np.empty((dim, k * n))
+    index = 0
+    mus = []
+    for i in xrange(k):
+        mu = random() * (upper - lower) + lower
+        mus.append(mu)
+        for j in xrange(n):
+            for d in xrange(dim):
+                data[d][index] = ngauss(mu, sigma)
+            index += 1
+    return data, mus
 
 def scatterPlot(data):
     plt.xlabel('x-coordinates')
