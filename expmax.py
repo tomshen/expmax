@@ -31,7 +31,7 @@ def initial_hypothesis(data, k):
     h = []
     minval = np.min(data)
     maxval = np.max(data)
-    """
+    #"""
     interval = (maxval - minval) / k
     h.append(minval)
     for i in xrange(1, k-1):
@@ -40,7 +40,9 @@ def initial_hypothesis(data, k):
     """
     for i in xrange(k):
         h.append(randint(int(minval), int(maxval)))
+    """
     return h
+
 
 def compare_hypothesis(h, h_old, threshold=0.01):
     if not h_old:
@@ -83,16 +85,19 @@ def calculate_hypothesis(k, data, expected_values):
             h.append(mu_num / mu_denom)
     return h
 
+# prints means squared error
 @timed
 def test():
     difflist = []
-    k=3
-    for j in xrange(10):
+    k = 3
+    trials = 10
+    for j in xrange(trials):
         data, mus = kgauss_with_mus(k, 100, dim=1, lower=-100, upper=100, sigma=3)  
         model_mus =  expectation_maximization(data[0], k, 3)
         model_mus.sort()
         mus.sort()
-        difflist.append(tuple([fabs((mus[i] - model_mus[i])/mus[i]) for i in xrange(k)]))
+        print model_mus, mus
+        difflist.append(tuple([(mus[i] - model_mus[i])**2 for i in xrange(k)]))
         print difflist[j]
     diffs = [0 for i in xrange(k)]
     for i in xrange(k):
@@ -104,8 +109,9 @@ def test():
 def main():
     #data, mus = kgauss(2, 100, dim=1, lower=-100, upper=100, sigma=3)
     #exportFile('temp.txt', data)
-    #data = importFile('temp.txt')
-    # test()
+    # data = importFile('temp.txt')
+    test()
+    """
     data = []
     for i in kgauss(1, 10, dim=1, lower=-100, upper=100, sigma=3)[0]:
         data.append(i)
@@ -116,6 +122,7 @@ def main():
         em = expectation_maximization(np.array(data), 2, 1)
         print 'Let\'s try again'
     print em
+    """
 
 
 if __name__ == "__main__":
