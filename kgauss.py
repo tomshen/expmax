@@ -15,6 +15,27 @@ from scipy.stats import gaussian_kde
 from scipy.stats import normaltest
 from util import importFile, exportFile
 
+def mvgauss(mean, cov, n):
+    return np.random.multivariate_normal(mean, cov, (n))
+
+def kmvgauss(k, n, cov, dim, lower=-100, upper=100):
+    data = np.empty((k * n, dim))
+    index = 0
+    index = 0
+    means = []
+    for i in xrange(k):
+        mean = []
+        for d in xrange(dim):
+            mu = random() * (upper - lower) + lower
+            mean.append(mu)
+        means.append(mean)
+        dist = mvgauss(mean, cov, n)
+        for p in dist:
+            for d in xrange(dim):
+                data[index][d] = p[d]
+            index += 1
+    return data, means
+
 """
 My implementation of a Gaussian distribution generator, based on the 
 Box-Muller transform.
@@ -116,13 +137,17 @@ def cdf(data, name):
 
 def main():
     filename = 'temp.txt'
-
-    kg = kgauss(2, 100, lower=-90, upper=90)
-    exportFile(filename, kg)
-    kg = importFile(filename)
+    data, means = kmvgauss(3, 100, [[10,50],[50,10]], 2)
+    print data
+    data = [[z[i] for z in data] for i in xrange(2)]
+    plt.plot(data[0], data[1], 'ro')
+    plt.show()
+    #kg = kgauss(2, 100, lower=-90, upper=90)
+    #exportFile(filename, kg)
+    #kg = importFile(filename)
 
     #print normaltest(kg[0])
-    scatterPlot(kg)
+    #scatterPlot(kg)
     # pdf(kg[0], 40, 'x-coordinates')
     # cdf(kg[0], 'x-coordinates')
     

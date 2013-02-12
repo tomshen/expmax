@@ -16,7 +16,7 @@ def multi_expectation_maximization(data, dim, k, sigmas):
         return expectation_maximization(data, k, sigmas)
     h = []
     for d in xrange(dim):
-        h.append(expectation_maximization(data[d], k, sigmas[d])) # obviously need to change to cov matrix
+        h.append(expectation_maximization(data[d], k, sigmas[d]))
     return h
 
 def expectation_maximization(data, k, sigmas):
