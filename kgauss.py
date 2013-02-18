@@ -11,7 +11,6 @@ from random import gauss, random
 from math import pi
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import gaussian_kde
 from scipy.stats import normaltest
 from util import importFile, exportFile
 

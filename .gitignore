@@ -1,4 +1,6 @@
 *.pyc
 *.class
+
 temp.txt
-commons-math3-*
+lib
+notes
