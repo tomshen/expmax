@@ -22,13 +22,22 @@ def multivariate_expectation_maximization(data, k, covs):
     covs_old = None
     i = 0
     while compare_2d(means, means_old) or compare_3d(covs, covs_old):
+        
+        print '--- ITERATION', i, '---'
+        """
+        print 'means', means
+        print 'covs', covs[0], covs[1]
+        """
+        i += 1
         exp_val = calculate_expectation(k, data, means, covs)
         means_old, covs_old = means, covs
         means, covs = calculate_hypothesis(k, fdata, exp_val)
-        i += 1
-        print '--- ITERATION', i, '---'
-        print 'means', means
-        # print 'covs', covs[0], covs[1]
+        for mean in means:
+            for m in mean:
+                if isnan(m):
+                    print 'Error: encountered NaN, exiting'
+                    exit()
+        
     return means, covs
 
 # takes in fdata
@@ -56,6 +65,7 @@ def initial_means(data, k):
 # takes in fdata
 def initial_covs(data, k):
     dim = data.shape[0]
+    return [np.identity(dim) for i in xrange(k)]
     covs = [np.empty((dim, dim)) for i in xrange(k)]
     for i in xrange(len(covs)):
         for j in xrange(len(covs[0])):
@@ -63,17 +73,17 @@ def initial_covs(data, k):
                 covs[i][j][k] = randint(-10, 10)
     return covs
 
-def compare_2d(curr, old, epsilon=1):
+def compare_2d(curr, old, epsilon=0.01):
     if not old:
         return True
     diff = 0
     for i in xrange(len(curr)):
         for d in xrange(len(curr[0])):
             diff += fabs(curr[i][d] - old[i][d])**2
-    print 'mean diff', sqrt(diff)
+    # print 'mean diff', sqrt(diff)
     return sqrt(diff) > epsilon
 
-def compare_3d(curr, old, epsilon=1):
+def compare_3d(curr, old, epsilon=0.01):
     if old == None:
         return True
     diff = 0
@@ -81,27 +91,22 @@ def compare_3d(curr, old, epsilon=1):
         for j in xrange(len(curr[0])):
             for k in xrange(len(curr[0][0])):
                 diff += (curr[i][j][k] - old[i][j][k])**2
-    print 'cov diff', sqrt(diff)
+    # print 'cov diff', sqrt(diff)
     return sqrt(diff) > epsilon
 
 # i is which of the k distributions you are considering
 def expected_value_point(point, i, means, covs):
     exp_num = prob_point_gauss(point, means[i], covs[i])
-    assert(prob_point_gauss(point, means[i], covs[i]) == prob_point_gauss(point, means[i], covs[i])) # not the same every time
     exp_denom = 0
     for j in xrange(len(means)):
         exp_denom += prob_point_gauss(point, means[j], covs[j])
     if exp_denom < exp_num:
         print means, covs
-        print [prob_point_gauss(point, means[j], covs[j]) for j in xrange(len(means))], exp_num
+        print [prob_point_gauss(point, kernel) for j in xrange(len(means))], exp_num
         exit()
     return 0 if exp_denom == 0 else (exp_num / exp_denom)
 
 def prob_point_gauss(point, mean, cov):
-    kernel = gaussian_kde(np.random.multivariate_normal(mean, cov))
-    prob = reduce(lambda x, y: x + y, kernel.evaluate(point)) / len(point)
-    return max(kernel.evaluate(point)) #prob
-    """
     dim = len(point)
     cov = np.matrix(cov)
     if dim != len(mean) or (dim, dim) != cov.shape:
@@ -109,11 +114,14 @@ def prob_point_gauss(point, mean, cov):
     det = np.linalg.det(cov)
     if det == 0:
         raise NameError('Covariance matrix can\'t be singular')
-    norm_const = 1.0 / (pow((2*pi), float(dim)/2) * det**0.5)
+    try:
+        norm_const = 1.0 / (pow((2*pi), float(dim)/2) * pow(det, 1.0/2))
+    except:
+        print det, cov
+        exit()
     point_mean = np.matrix(point - mean)
     inv = cov.I
-    return pow(e, -0.5 * (point_mean * inv * point_mean.T).item()) * norm_const
-    """
+    return norm_const * pow(e, -0.5 * (point_mean * inv * point_mean.T).item()) 
 
 # takes in data
 def calculate_expectation(k, data, means, covs):
@@ -123,6 +131,16 @@ def calculate_expectation(k, data, means, covs):
             evp = expected_value_point(data[i], j, means, covs)
             exp_val[j][i] = evp
     return exp_val
+
+def calc_cov(data, dim, mean):
+    cov = np.empty((dim, dim))
+    sum_ev_squared = 0
+    for l in xrange(dim):
+        for k in xrange(dim):
+            for i in xrange(data.shape[1]):
+                cov[l][k] += (data[l][i] - mean[l]) * (data[k][i] - mean[k])
+            cov[l][k] /= data.shape[1] - 1
+    return cov
 
 # takes in fdata
 def calculate_hypothesis(k, data, exp_val):
@@ -143,18 +161,12 @@ def calculate_hypothesis(k, data, exp_val):
         means.append(mean)
 
         cov = np.empty((dim, dim))
-        sum_ev_squared = 0
         for l in xrange(dim):
             for k in xrange(dim):
                 for i in xrange(n):
-                    sum_ev_squared += exp_val[j][i]**2
                     cov[l][k] += exp_val[j][i] * (data[l][i] - mean[l]) * (data[k][i] - mean[k])
-        for l in xrange(dim):
-            for k in xrange(dim):
-                cov[l][k] *= (denom / (denom**2 - sum_ev_squared))
-                if isnan(cov[l][k]):
-                    print 'ERROR', denom, sum_ev_squared, (denom**2 - sum_ev_squared)
-                    exit()
+                cov[l][k] /= denom * (n - 1) / n
+
         covs.append(cov)
         """
         cv = [0 for i in xrange(dim)]
@@ -197,7 +209,36 @@ def test():
     print model_covs
 
 def main():
+    """cov = [[10, 0], [0, 10]]
+    data1, means1 = kmvgauss(1, 100, cov, 2)
+    fdata1 = reformat_data(data1)
+    cov1 = np.cov(fdata1)
+    means = []
+    for i in xrange(2):
+        mean = 0
+        for j in xrange(100):
+            mean += fdata1[i][j]
+        mean /= 100
+        means.append(mean)
+    kernel = gaussian_kde(fdata1)
+    for p in data1:
+        print kernel.evaluate(p), prob_point_gauss(p, means, cov1)"""
     test()
+    """
+    cov = [[10, 0], [0, 10]]
+    data1, means1 = kmvgauss(1, 100, cov, 2)
+    fdata1 = reformat_data(data1)
+    actual_cov = np.cov(fdata1)
+    means = []
+    for i in xrange(2):
+        mean = 0
+        for j in xrange(100):
+            mean += fdata1[i][j]
+        mean /= 100
+        means.append(mean)
+    calculated_cov = calc_cov(fdata1, 2, means)
+    print actual_cov, calculated_cov
+    """
     
 if __name__ == "__main__":
     main()
