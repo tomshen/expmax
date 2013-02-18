@@ -3,7 +3,7 @@ An implementation of the exp-max algorithm, using a covariance matrix
 Author: Tom Shen
 Date: 2013/02/12
 """
-from math import fabs, pow, e, pi, isnan
+from math import fabs, pow, e, pi, isnan, sqrt
 from random import randint
 from scipy.stats import norm, gaussian_kde
 import numpy as np
@@ -17,20 +17,25 @@ def reformat_data(data):
 def multivariate_expectation_maximization(data, k, covs):
     fdata = reformat_data(data)
     means = initial_means(fdata, k)
-    covs = covs# initial_covs(fdata, k)
+    covs = initial_covs(fdata, k)
     means_old = None
     covs_old = None
+    i = 0
     while compare_2d(means, means_old) or compare_3d(covs, covs_old):
         exp_val = calculate_expectation(k, data, means, covs)
         means_old, covs_old = means, covs
         means, covs = calculate_hypothesis(k, fdata, exp_val)
-        print means, covs
+        i += 1
+        print '--- ITERATION', i, '---'
+        print 'means', means
+        # print 'covs', covs[0], covs[1]
     return means, covs
 
 # takes in fdata
 def initial_means(data, k):
     dim = data.shape[0]
     means = [np.empty(dim) for i in xrange(k)]
+    """
     for d in xrange(dim):
         minval = np.min(data[d])
         maxval = np.max(data[d])
@@ -39,10 +44,13 @@ def initial_means(data, k):
         for i in xrange(1, k-1):
             means[i][d] = minval + i * interval
         means[k-1][d] = maxval
-        #"""
+    """
+    for d in xrange(dim):
+        minval = np.min(data[d])
+        maxval = np.max(data[d])
         for i in xrange(k):
             means[i][d] = randint(int(minval), int(maxval))
-        #"""
+    # """
     return means
 
 # takes in fdata
@@ -55,36 +63,44 @@ def initial_covs(data, k):
                 covs[i][j][k] = randint(-10, 10)
     return covs
 
-def compare_2d(curr, old, epsilon=0.01):
+def compare_2d(curr, old, epsilon=1):
     if not old:
         return True
     diff = 0
     for i in xrange(len(curr)):
         for d in xrange(len(curr[0])):
-            diff += curr[i][d] - old[i][d]
-    return fabs(diff) > 0.01
+            diff += fabs(curr[i][d] - old[i][d])**2
+    print 'mean diff', sqrt(diff)
+    return sqrt(diff) > epsilon
 
-def compare_3d(curr, old, epsilon=0.01):
-    if not old:
+def compare_3d(curr, old, epsilon=1):
+    if old == None:
         return True
     diff = 0
     for i in xrange(len(curr)):
         for j in xrange(len(curr[0])):
             for k in xrange(len(curr[0][0])):
-                diff += curr[i][j][k] - old[i][j][k]
-    return fabs(diff) > 0.01
+                diff += (curr[i][j][k] - old[i][j][k])**2
+    print 'cov diff', sqrt(diff)
+    return sqrt(diff) > epsilon
 
-def expected_value_point(point, mean, means, cov, covs):
-    exp_num = prob_point_gauss(point, mean, cov)
+# i is which of the k distributions you are considering
+def expected_value_point(point, i, means, covs):
+    exp_num = prob_point_gauss(point, means[i], covs[i])
+    assert(prob_point_gauss(point, means[i], covs[i]) == prob_point_gauss(point, means[i], covs[i])) # not the same every time
     exp_denom = 0
-    for i in xrange(len(means)):
-        exp_denom += prob_point_gauss(point, means[i], covs[i])
+    for j in xrange(len(means)):
+        exp_denom += prob_point_gauss(point, means[j], covs[j])
+    if exp_denom < exp_num:
+        print means, covs
+        print [prob_point_gauss(point, means[j], covs[j]) for j in xrange(len(means))], exp_num
+        exit()
     return 0 if exp_denom == 0 else (exp_num / exp_denom)
 
 def prob_point_gauss(point, mean, cov):
     kernel = gaussian_kde(np.random.multivariate_normal(mean, cov))
     prob = reduce(lambda x, y: x + y, kernel.evaluate(point)) / len(point)
-    return prob
+    return max(kernel.evaluate(point)) #prob
     """
     dim = len(point)
     cov = np.matrix(cov)
@@ -104,7 +120,7 @@ def calculate_expectation(k, data, means, covs):
     exp_val = np.empty((k, data.shape[0]))
     for i in xrange(data.shape[0]):
         for j in xrange(k):
-            evp = expected_value_point(data[i], means[j], means, covs[j], covs)
+            evp = expected_value_point(data[i], j, means, covs)
             exp_val[j][i] = evp
     return exp_val
 
@@ -117,7 +133,6 @@ def calculate_hypothesis(k, data, exp_val):
     for j in xrange(k):
         denom = 0
         mean = []
-        cov = np.identity(dim)
         for i in xrange(n):
             denom += exp_val[j][i]
         for d in xrange(dim):
@@ -127,6 +142,21 @@ def calculate_hypothesis(k, data, exp_val):
             mean.append(mean_num / denom)
         means.append(mean)
 
+        cov = np.empty((dim, dim))
+        sum_ev_squared = 0
+        for l in xrange(dim):
+            for k in xrange(dim):
+                for i in xrange(n):
+                    sum_ev_squared += exp_val[j][i]**2
+                    cov[l][k] += exp_val[j][i] * (data[l][i] - mean[l]) * (data[k][i] - mean[k])
+        for l in xrange(dim):
+            for k in xrange(dim):
+                cov[l][k] *= (denom / (denom**2 - sum_ev_squared))
+                if isnan(cov[l][k]):
+                    print 'ERROR', denom, sum_ev_squared, (denom**2 - sum_ev_squared)
+                    exit()
+        covs.append(cov)
+        """
         cv = [0 for i in xrange(dim)]
         for d in xrange(dim):
             ws = 0
@@ -140,6 +170,7 @@ def calculate_hypothesis(k, data, exp_val):
             for b in xrange(cov.shape[1]):
                 cov[a][b] *= denom / (denom**2 - ws)
         covs.append(np.array(cov))
+        """
     return means, covs
 
 @timed
@@ -151,6 +182,11 @@ def test():
     fdata1, fdata2 = reformat_data(data1), reformat_data(data2)
 
     cov1, cov2 = np.cov(fdata1), np.cov(fdata2)
+
+    print 'Actual'
+    print means1, means2
+    print cov1, cov2
+
     model_means, model_covs = multivariate_expectation_maximization(data, 2, np.array([cov1, cov2]))
 
     print 'Actual'
