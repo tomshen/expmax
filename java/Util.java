@@ -3,7 +3,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.*;
-
+import org.apache.commons.math3.linear.*;
 
 public abstract class Util {
 	public static String arrayToString(double[][] arr) {
@@ -15,6 +15,20 @@ public abstract class Util {
                 s += "\n";
         }
         return s;
+    }
+
+    public static double[][] deepcopy(double[][] arr) {
+        double[][] arrCopy = new double[arr.length][arr[0].length];
+        for(int i = 0; i < arr.length; i++)
+            System.arraycopy(arr[i], 0, arrCopy[i], 0, arr[0].length);
+        return arrCopy;
+    }
+
+    public static RealMatrix[] deepcopy(RealMatrix[] arr) {
+        RealMatrix[] arrCopy = new RealMatrix[arr.length];
+        for(int i = 0; i < arr.length; i++)
+            arrCopy[i] = arr[i].copy();
+        return arrCopy;
     }
 	
 	public static double[][] stringToArray(String s) {
