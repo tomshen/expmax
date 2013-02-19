@@ -16,7 +16,7 @@ def reformat_data(data):
 
 def multivariate_expectation_maximization(data, k, covs):
     fdata = reformat_data(data)
-    means = initial_means(fdata, k)
+    means = [[-40, -100], [-80, 50]]# initial_means(fdata, k)
     covs = initial_covs(fdata, k)
     means_old = None
     covs_old = None
@@ -153,6 +153,7 @@ def calculate_hypothesis(k, data, exp_val):
         mean = []
         for i in xrange(n):
             denom += exp_val[j][i]
+
         for d in xrange(dim):
             mean_num = 0
             for i in xrange(n):
@@ -223,7 +224,7 @@ def main():
     kernel = gaussian_kde(fdata1)
     for p in data1:
         print kernel.evaluate(p), prob_point_gauss(p, means, cov1)"""
-    test()
+    # test()
     """
     cov = [[10, 0], [0, 10]]
     data1, means1 = kmvgauss(1, 100, cov, 2)
@@ -239,6 +240,8 @@ def main():
     calculated_cov = calc_cov(fdata1, 2, means)
     print actual_cov, calculated_cov
     """
+    data = importFile("temp.txt")
+    print multivariate_expectation_maximization(reformat_data(data), 2, [[1,0], [0,1]])
     
 if __name__ == "__main__":
     main()

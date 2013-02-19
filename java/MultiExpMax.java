@@ -1,4 +1,6 @@
+import java.io.IOException;
 import java.util.*;
+
 import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
@@ -20,6 +22,8 @@ public class MultiExpMax
         
         means = new double[numDist][dim];
         /* TODO: initialize means */
+        means = new double[][] {{-40, 60}, 
+                    {-50, 30}};
 
         covs = new RealMatrix[numDist];
         for(int i = 0; i < numDist; i++) {
@@ -33,12 +37,14 @@ public class MultiExpMax
     public void calculateParameters() {
         double[][] oldMeans = new double[numDist][dim];
         RealMatrix[] oldCovs = new RealMatrix[numDist];
+        int i = 0;
         do {
+            System.out.println("iteration " + i++);
             oldMeans = Util.deepcopy(means);
             oldCovs = Util.deepcopy(covs);
             calculateHypothesis(calculateExpectation());
         } while(compare(means, oldMeans) || compare(covs, oldCovs));
-        System.out.println("Done! Means: " + Arrays.toString(means));
+        System.out.println("Done! Means: " + Util.arrayToString(means));
     }
 
     private boolean compare(double[][] curr, double[][] old) {
@@ -94,8 +100,10 @@ public class MultiExpMax
         return probCurrDist / probAllDist;
     }
 
-    private static double probPoint(double[] point, double[] means, RealMatrix cov) {
-        MultivariateNormalDistribution dist = new MultivariateNormalDistribution(means, cov.getData());
+    private static double probPoint(double[] point, 
+                                    double[] means, RealMatrix cov) {
+        MultivariateNormalDistribution dist = 
+            new MultivariateNormalDistribution(means, cov.getData());
         return dist.density(point);
     }
     
@@ -119,10 +127,22 @@ public class MultiExpMax
                                          * (data[r][j] - means[i][r])
                                          * (data[c][j] - means[i][c]));
                     }
-                    covs[i].setEntry(r, c, covs[i].getEntry(r, c) 
-                    			     / (totalExp * (numPoints - 1) / numPoints));
+                    covs[i].setEntry(r, c, covs[i].getEntry(r, c) / 
+                                     (totalExp * (numPoints - 1) / numPoints));
                 }
-            }            
+            }
         }
-    } 
+    }
+    
+    public static void main(String args[]) throws IOException {
+    	// Util.exportFile("temp.txt", KGauss.multiVariateKGauss(2, 2, 100));
+        double[][] data = Util.importFile("temp.txt");
+        MultiExpMax em = new MultiExpMax(data, 2);
+        em.calculateParameters();
+         
+        System.out.println("Model means:  " + Util.arrayToString(em.means));
+        for(RealMatrix m : em.covs)
+            System.out.println("Model cov: " 
+                + Util.arrayToString(m.getData()));
+    }
 }

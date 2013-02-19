@@ -135,14 +135,19 @@ def cdf(data, name):
     plt.show()
 
 def main():
+    
     filename = 'temp.txt'
+    """
     data, means = kmvgauss(3, 100, [[10,50],[50,10]], 2)
     print data
     data = [[z[i] for z in data] for i in xrange(2)]
     plt.plot(data[0], data[1], 'ro')
-    plt.show()
-    #kg = kgauss(2, 100, lower=-90, upper=90)
-    #exportFile(filename, kg)
+    plt.show()"""
+    def reformat_data(data):
+        return np.array([[z[i] for z in data] for i in xrange(data.shape[1])])
+    data, means = kmvgauss(2, 100, [[10, 0], [0, 10]], 2)
+    print means
+    exportFile(filename, reformat_data(data))
     #kg = importFile(filename)
 
     #print normaltest(kg[0])

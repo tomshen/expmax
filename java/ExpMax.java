@@ -21,11 +21,12 @@ public class ExpMax
     public double[] sigmas;
     private double epsilon = 0.01;
 
+    
     public ExpMax(double[] data, int k) {
         this.data = data;
         numDist = k;
         numPoints = data.length;
-    	
+        
         means = new double[numDist];
         double minVal = new Min().evaluate(data, 0, data.length);
         double maxVal = new Max().evaluate(data, 0, data.length);
@@ -73,7 +74,7 @@ public class ExpMax
         for(int i = 0; i < numDist; i++)
             probAllDist += probPoint(point, means[i], sigmas[i]);
         if(probAllDist == 0)
-        	return 0;
+            return 0;
         return probCurrDist / probAllDist;
     }
 
@@ -83,23 +84,22 @@ public class ExpMax
     }
     
     private void calculateHypothesis(double[][] expectedValues) {
-    	for(int i = 0; i < numDist; i++) {
-    		double totalExp = 0;
-    		means[i] = 0;
-    		sigmas[i] = 0;
-    		for(int j = 0; j < numPoints; j++) {
-    			means[i] += expectedValues[i][j] * data[j];
-    			totalExp += expectedValues[i][j];
-    		}
-    		means[i] /= totalExp;
-    		for(int j = 0; j < numPoints; j++) {
-    			sigmas[i] += expectedValues[i][j]
-    						 * FastMath.pow((data[j] - means[i]), 2.0);
-    		}
-    		sigmas[i] = FastMath.pow(sigmas[i] / totalExp, 0.5);
-    	}
+        for(int i = 0; i < numDist; i++) {
+            double totalExp = 0;
+            means[i] = 0;
+            sigmas[i] = 0;
+            for(int j = 0; j < numPoints; j++) {
+                means[i] += expectedValues[i][j] * data[j];
+                totalExp += expectedValues[i][j];
+            }
+            means[i] /= totalExp;
+            for(int j = 0; j < numPoints; j++) {
+                sigmas[i] += expectedValues[i][j]
+                             * FastMath.pow((data[j] - means[i]), 2.0);
+            }
+            sigmas[i] = FastMath.pow(sigmas[i] / totalExp, 0.5);
+        }
     }
-    
     public static void main(String args[]) throws IOException {
     	int k = 3;
     	Util.exportFile("temp.txt", KGauss.kgauss(k, 100, 1, -100, 100, 0.1));
