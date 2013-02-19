@@ -1,6 +1,6 @@
 *.pyc
 *.class
+temp.*
 
-temp.txt
 lib
 notes
