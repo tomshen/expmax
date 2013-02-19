@@ -86,7 +86,6 @@ def calculate_hypothesis(k, data, expected_values):
         for i in xrange(data.size):
             sigma_num += expected_values[j][i] * (data[i] - mus[j])**2
         sigmas.append((sigma_num / denom)**0.5)
-    print sigmas
     return mus, sigmas
 
 # prints means squared error
@@ -108,7 +107,6 @@ def test():
         for j in xrange(10):
             diffs[i] += difflist[j][i]
         diffs[i] /= 10
-    print diffs
 
 def main():
     #data, mus = kgauss(2, 100, dim=1, lower=-100, upper=100, sigma=3)
@@ -128,8 +126,9 @@ def main():
     print em
     """
     data, mus, sigmas = kgauss_with_mus_sigmas(2, 100, dim=1, lower=-100, upper=100)
+    exportFile('temp.txt', data)
     print mus, sigmas
-    print expectation_maximization(data[0], 2, [10, 10])
+    print expectation_maximization(data[0], 2, [1, 1])
 
 
 if __name__ == "__main__":

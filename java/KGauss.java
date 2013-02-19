@@ -24,7 +24,7 @@ public class KGauss
         return ngauss(mu, sigma, 1)[0];
     }
 
-    public static double[][] k_gauss(int k, int n, int dim, double lower,
+    public static double[][] kgauss(int k, int n, int dim, double lower,
                                            double upper, double scale) {
         double[][] data = new double[dim][n*k];
         int index = 0;
@@ -42,47 +42,10 @@ public class KGauss
         return data;
     }
 
-    private static String arrayToString(double[][] arr) {
-        String s = "";
-        for(double[] da : arr) {
-            for(double d : da)
-                s += Double.toString(d) + " ";
-            if(da != arr[arr.length - 1])
-                s += "\n";
-        }
-        return s;
-    }
-
-    public static String exportFile(String filename, double[][] data) {
-        File outFile = new File(filename);
-        BufferedWriter writer = null;
-        try
-        {
-            writer = new BufferedWriter(new FileWriter(outFile));
-            writer.write(arrayToString(data));
-        }
-        catch ( IOException e)
-        {
-            System.out.println("Could not write to " + filename);
-        }
-        finally
-        {
-            try
-            {
-                if ( writer != null)
-                    writer.close();
-            }
-            catch ( IOException e)
-            {
-                System.out.println("Could not close writer for " + filename);
-            }
-         }
-         return filename;
-    }
-    public static void main(String args[]) {
+    public static void main(String args[]) throws IOException {
         int k = 2;
         int n = 1000;
-        int dim = 2;
+        int dim = 1;
         int lower = -100;
         int upper = 100;
         double scale = 0.1;
@@ -98,7 +61,9 @@ public class KGauss
             upper = Integer.parseInt(args[4]);
         if(args.length > 6)
             scale = Double.parseDouble(args[5]);
-        double[][] kg = k_gauss(k, n, dim, lower, upper, scale);
-        exportFile("temp.txt", kg);
+        double[][] kg = kgauss(k, n, dim, lower, upper, scale);
+        Util.exportFile("temp.txt", kg);
+        double[][] arr = Util.importFile("temp.txt");
+        System.out.println(Arrays.toString(arr[0]));
     }
 }

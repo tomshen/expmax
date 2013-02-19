@@ -1,0 +1,76 @@
+import java.io.*;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.util.*;
+
+
+public abstract class Util {
+	public static String arrayToString(double[][] arr) {
+        String s = "";
+        for(double[] da : arr) {
+            for(double d : da)
+                s += Double.toString(d) + " ";
+            if(da != arr[arr.length - 1])
+                s += "\n";
+        }
+        return s;
+    }
+	
+	public static double[][] stringToArray(String s) {
+        String[] s1 = s.split("\n");
+        ArrayList<ArrayList<Double>> dl = new ArrayList<ArrayList<Double>>();
+        for(int i = 0; i < s1.length; i++) {
+        	dl.add(new ArrayList<Double>());
+        	for(String entry: s1[i].split(" ")) {
+        		dl.get(i).add(Double.parseDouble(entry));
+        	}
+        }
+        double[][] arr = new double[dl.size()][dl.get(0).size()];
+        for(int r = 0; r < dl.size(); r++) {
+        	for(int c = 0; c < dl.get(0).size(); c++) {
+        		arr[r][c] = dl.get(r).get(c);
+        	}
+        }
+        return arr;
+    }
+	
+	public static double[][] importFile(String filename) throws IOException {
+		FileInputStream stream = new FileInputStream(new File(filename));
+		try {
+		    FileChannel fc = stream.getChannel();
+		    MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
+		    return stringToArray(Charset.defaultCharset().decode(bb).toString());
+		}
+		finally {
+			stream.close();
+		}
+	}
+	
+	public static String exportFile(String filename, double[][] data) {
+        File outFile = new File(filename);
+        BufferedWriter writer = null;
+        try
+        {
+            writer = new BufferedWriter(new FileWriter(outFile));
+            writer.write(arrayToString(data));
+        }
+        catch ( IOException e)
+        {
+            System.out.println("Could not write to " + filename);
+        }
+        finally
+        {
+            try
+            {
+                if (writer != null)
+                    writer.close();
+            }
+            catch (IOException e)
+            {
+                System.out.println("Could not close writer for " + filename);
+            }
+         }
+         return filename;
+    }
+}
