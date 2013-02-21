@@ -1,3 +1,4 @@
+package edu.cmu.ml.geoEM;
 import java.util.*;
 import java.io.*;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;

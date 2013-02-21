@@ -34,16 +34,11 @@ def initial_hypothesis_mu(data, k):
     h = []
     minval = np.min(data)
     maxval = np.max(data)
-    #"""
     interval = (maxval - minval) / k
     h.append(minval)
     for i in xrange(1, k-1):
         h.append(minval + i * interval)
     h.append(maxval)
-    """
-    for i in xrange(k):
-        h.append(randint(int(minval), int(maxval)))
-    """
     return h
 
 def compare_hypothesis(curr, old, epsilon=0.01):
@@ -108,28 +103,27 @@ def test():
             diffs[i] += difflist[j][i]
         diffs[i] /= 10
 
-def main():
-    #data, mus = kgauss(2, 100, dim=1, lower=-100, upper=100, sigma=3)
-    #exportFile('temp.txt', data)
-    # data = importFile('temp.txt')
-    # test()
-    """
-    data = []
-    for i in kgauss(1, 10, dim=1, lower=-100, upper=100, sigma=3)[0]:
-        data.append(i)
-    for i in kgauss(1, 1000, dim=1, lower=-100, upper=100, sigma=3)[0]:
-        data.append(i)
-    em = expectation_maximization(np.array(data), 2, 1)
-    while not (em[0] and em[1]):
-        em = expectation_maximization(np.array(data), 2, 1)
-        print 'Let\'s try again'
-    print em
-    """
-    data, mus, sigmas = kgauss_with_mus_sigmas(2, 100, dim=1, lower=-100, upper=100)
-    exportFile('temp.txt', data)
-    print mus, sigmas
-    print expectation_maximization(data[0], 2, [1, 1])
+def test_ppg():
+    point, mean, sigma = randint(-100, 100), randint(-100, 100), randint(5, 20)
+    print 'copyValueFromPython = ' + str(prob_point_gauss(point, mean, sigma)) + ';'
+    print 'assertEquals(copyValueFromPython,ExpMax.probPoint(' + str(point) + ', ' + str(mean) + ', ' + str(sigma) +'),1e-4);'
 
+def test_em():
+    filename = '..\\Java\\temp2.txt'
+    data = kgauss(2, 100, dim=1, lower=-100, upper=100, sigma=randint(5, 15))
+    exportFile(filename, data)
+    # print data[0]
+    params = expectation_maximization(data[0], 2, [1, 1])
+    print 'pythonParams = new double[][] {',
+    for i in params:
+        print '{',
+        for j in i:
+            print str(j) + ',',
+        print '},',
+    print '};'
+
+def main():
+    test_em()    
 
 if __name__ == "__main__":
     main()

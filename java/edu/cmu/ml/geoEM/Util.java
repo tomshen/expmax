@@ -1,7 +1,9 @@
+package edu.cmu.ml.geoEM;
 import java.io.*;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
+import java.text.DecimalFormat;
 import java.util.*;
 import org.apache.commons.math3.linear.*;
 
@@ -87,4 +89,18 @@ public abstract class Util {
          }
          return filename;
     }
+	
+	public static double round(double d, int i) {
+		String s = "#.";
+		while(i-- > 0)
+			s += "#";
+        DecimalFormat twoDForm = new DecimalFormat(s);
+        return Double.valueOf(twoDForm.format(d));
+	}
+	
+	public static void roundArray(double[][] arr) {
+		for(int i = 0; i < arr.length; i++)
+			for(int j = 0; j < arr[0].length; j++)
+				arr[i][j] = round(arr[i][j], 1);
+	}
 }

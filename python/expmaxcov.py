@@ -14,10 +14,10 @@ from util import timed, importFile, exportFile
 def reformat_data(data):
     return np.array([[z[i] for z in data] for i in xrange(data.shape[1])])
 
-def multivariate_expectation_maximization(data, k, covs):
+def multivariate_expectation_maximization(data, k, covs, means):
     fdata = reformat_data(data)
-    means = [[-40, -100], [-80, 50]]# initial_means(fdata, k)
-    covs = initial_covs(fdata, k)
+    means = means # initial_means(fdata, k)
+    covs = covs # initial_covs(fdata, k)
     means_old = None
     covs_old = None
     i = 0
@@ -30,6 +30,7 @@ def multivariate_expectation_maximization(data, k, covs):
         """
         i += 1
         exp_val = calculate_expectation(k, data, means, covs)
+        print exp_val
         means_old, covs_old = means, covs
         means, covs = calculate_hypothesis(k, fdata, exp_val)
         for mean in means:
@@ -37,7 +38,6 @@ def multivariate_expectation_maximization(data, k, covs):
                 if isnan(m):
                     print 'Error: encountered NaN, exiting'
                     exit()
-        
     return means, covs
 
 # takes in fdata
@@ -80,7 +80,6 @@ def compare_2d(curr, old, epsilon=0.01):
     for i in xrange(len(curr)):
         for d in xrange(len(curr[0])):
             diff += fabs(curr[i][d] - old[i][d])**2
-    # print 'mean diff', sqrt(diff)
     return sqrt(diff) > epsilon
 
 def compare_3d(curr, old, epsilon=0.01):
@@ -91,7 +90,6 @@ def compare_3d(curr, old, epsilon=0.01):
         for j in xrange(len(curr[0])):
             for k in xrange(len(curr[0][0])):
                 diff += (curr[i][j][k] - old[i][j][k])**2
-    # print 'cov diff', sqrt(diff)
     return sqrt(diff) > epsilon
 
 # i is which of the k distributions you are considering
@@ -101,6 +99,7 @@ def expected_value_point(point, i, means, covs):
     for j in xrange(len(means)):
         exp_denom += prob_point_gauss(point, means[j], covs[j])
     if exp_denom < exp_num:
+        print 'Error: part greater than sum of parts'
         print means, covs
         print [prob_point_gauss(point, kernel) for j in xrange(len(means))], exp_num
         exit()
@@ -160,30 +159,13 @@ def calculate_hypothesis(k, data, exp_val):
                 mean_num += exp_val[j][i] * data[d][i]
             mean.append(mean_num / denom)
         means.append(mean)
-
         cov = np.empty((dim, dim))
         for l in xrange(dim):
             for k in xrange(dim):
                 for i in xrange(n):
                     cov[l][k] += exp_val[j][i] * (data[l][i] - mean[l]) * (data[k][i] - mean[k])
                 cov[l][k] /= denom * (n - 1) / n
-
         covs.append(cov)
-        """
-        cv = [0 for i in xrange(dim)]
-        for d in xrange(dim):
-            ws = 0
-            for i in xrange(n):
-                ws += exp_val[j][i]**2
-                cv[d] += (data[d][i] - mean[d]) * exp_val[j][i]**0.5
-        cv = np.matrix(cv)
-        cov = cv.T * cv
-        cov = np.array(cov)
-        for a in xrange(cov.shape[0]):
-            for b in xrange(cov.shape[1]):
-                cov[a][b] *= denom / (denom**2 - ws)
-        covs.append(np.array(cov))
-        """
     return means, covs
 
 @timed
@@ -196,11 +178,24 @@ def test():
 
     cov1, cov2 = np.cov(fdata1), np.cov(fdata2)
 
+    s = 'new double[][] {'
+    for m in [means1, means2]:
+        s += '{'
+        for i in m:
+            for j in i:
+                s += str(round(j, -1))
+                s += ','
+        s += '},'
+    s +='};'
+    print s
+    exportFile('..\\Java\\temp.m', reformat_data(data))
     print 'Actual'
     print means1, means2
     print cov1, cov2
 
-    model_means, model_covs = multivariate_expectation_maximization(data, 2, np.array([cov1, cov2]))
+    init_means = [[round(i, -1) for i in mean[0]] for mean in [means1, means2]]
+    print init_means
+    model_means, model_covs = multivariate_expectation_maximization(data, 2, np.array([cov1, cov2]), [init_means[0], init_means[1]])
 
     print 'Actual'
     print means1, means2
@@ -209,39 +204,27 @@ def test():
     print model_means
     print model_covs
 
+def test_ppg():
+    def list_to_java_array(l):
+        s = '{'
+        for i in l:
+            s += str(i) + ','
+        s += '}'
+        return s
+    point = [randint(-100, 100), randint(-100, 100)]
+    mean = [randint(-100, 100), randint(-100, 100)]
+    cov = [[randint(5, 15), 0], [0, randint(5, 15)]]
+    
+    jpoint = 'new double[] ' + list_to_java_array(point)
+    jmean = 'new double[] ' + list_to_java_array(mean)
+    jcov = 'new Array2DRowRealMatrix(new double[][] ' + list_to_java_array([list_to_java_array(i) for i in cov])
+    jcov += ')'
+    print 'copyValueFromPython = ' + str(prob_point_gauss(np.array(point), np.array(mean), np.array(cov))) + ';'
+    print 'assertEquals(copyValueFromPython,MultiExpMax.probPoint(' + jpoint,
+    print ', ' + jmean + ', ' + jcov +'),1e-330);'
+
 def main():
-    """cov = [[10, 0], [0, 10]]
-    data1, means1 = kmvgauss(1, 100, cov, 2)
-    fdata1 = reformat_data(data1)
-    cov1 = np.cov(fdata1)
-    means = []
-    for i in xrange(2):
-        mean = 0
-        for j in xrange(100):
-            mean += fdata1[i][j]
-        mean /= 100
-        means.append(mean)
-    kernel = gaussian_kde(fdata1)
-    for p in data1:
-        print kernel.evaluate(p), prob_point_gauss(p, means, cov1)"""
-    # test()
-    """
-    cov = [[10, 0], [0, 10]]
-    data1, means1 = kmvgauss(1, 100, cov, 2)
-    fdata1 = reformat_data(data1)
-    actual_cov = np.cov(fdata1)
-    means = []
-    for i in xrange(2):
-        mean = 0
-        for j in xrange(100):
-            mean += fdata1[i][j]
-        mean /= 100
-        means.append(mean)
-    calculated_cov = calc_cov(fdata1, 2, means)
-    print actual_cov, calculated_cov
-    """
-    data = importFile("temp.txt")
-    print multivariate_expectation_maximization(reformat_data(data), 2, [[1,0], [0,1]])
+    test()
     
 if __name__ == "__main__":
     main()

@@ -1,3 +1,4 @@
+package edu.cmu.ml.geoEM;
 import java.io.IOException;
 import java.util.*;
 
@@ -22,15 +23,14 @@ public class MultiExpMax
         
         means = new double[numDist][dim];
         /* TODO: initialize means */
-        means = new double[][] {{-40, 60}, 
-                    {-50, 30}};
+        means = new double[][] {{-80.0,40.0,},{-80.0,-10.0,},};
 
         covs = new RealMatrix[numDist];
         for(int i = 0; i < numDist; i++) {
             covs[i] = new Array2DRowRealMatrix(new double[dim][dim]);
             for(int r = 0; r < dim; r++)
                 for(int c = 0; c < dim; c++)
-                    if(r == c) covs[i].setEntry(r, c, 1.0);
+                    if(r == c) covs[i].setEntry(r, c, 10.0);
         }
     }
 
@@ -43,6 +43,7 @@ public class MultiExpMax
             oldMeans = Util.deepcopy(means);
             oldCovs = Util.deepcopy(covs);
             calculateHypothesis(calculateExpectation());
+            System.out.println(Util.arrayToString(covs[0].getData()));
         } while(compare(means, oldMeans) || compare(covs, oldCovs));
         System.out.println("Done! Means: " + Util.arrayToString(means));
     }
@@ -100,7 +101,7 @@ public class MultiExpMax
         return probCurrDist / probAllDist;
     }
 
-    private static double probPoint(double[] point, 
+    public static double probPoint(double[] point, 
                                     double[] means, RealMatrix cov) {
         MultivariateNormalDistribution dist = 
             new MultivariateNormalDistribution(means, cov.getData());
@@ -123,9 +124,10 @@ public class MultiExpMax
             for(int r = 0; r < dim; r++) {
                 for(int c = 0; c < dim; c++) {
                     for(int j = 0; j < numPoints; j++) {
-                        covs[i].setEntry(r, c, expectedValues[i][j]
-                                         * (data[r][j] - means[i][r])
-                                         * (data[c][j] - means[i][c]));
+                    	double entry = (expectedValues[i][j]
+                                * (data[r][j] - means[i][r])
+                                * (data[c][j] - means[i][c]));
+                        covs[i].setEntry(r, c, entry);
                     }
                     covs[i].setEntry(r, c, covs[i].getEntry(r, c) / 
                                      (totalExp * (numPoints - 1) / numPoints));

@@ -1,3 +1,4 @@
+package edu.cmu.ml.geoEM;
 /* 
  * ExpMax.java
  * Description: A implementation of the expectation-maximization algorithm
@@ -19,7 +20,7 @@ public class ExpMax
     public int numPoints;
     public double[] means;
     public double[] sigmas;
-    private double epsilon = 0.01;
+    protected double epsilon = 0.01;
 
     
     public ExpMax(double[] data, int k) {
@@ -51,7 +52,7 @@ public class ExpMax
         return new double[][] {means, sigmas};
     }
 
-    private boolean compare(double[] curr, double[] old) {
+    protected boolean compare(double[] curr, double[] old) {
         if(old == null)
             return true;
         double diff = 0.0;
@@ -60,7 +61,7 @@ public class ExpMax
         return FastMath.pow(diff, 0.5) > epsilon;
     }
 
-    private double[][] calculateExpectation() {
+    protected double[][] calculateExpectation() {
         double[][] expectedValues = new double[numDist][numPoints];
         for(int i = 0; i < numDist; i++)
             for(int j = 0; j < numPoints; j++)
@@ -68,7 +69,7 @@ public class ExpMax
         return expectedValues;
     }
 
-    private double expectedValuePoint(double point, int currDist) {
+    protected double expectedValuePoint(double point, int currDist) {
         double probCurrDist = probPoint(point, means[currDist], sigmas[currDist]);
         double probAllDist = 0;
         for(int i = 0; i < numDist; i++)
@@ -78,12 +79,12 @@ public class ExpMax
         return probCurrDist / probAllDist;
     }
 
-    private static double probPoint(double point, double mean, double sigma) {
+    protected static double probPoint(double point, double mean, double sigma) {
         NormalDistribution dist = new NormalDistribution(mean, sigma);
         return dist.density(point);
     }
     
-    private void calculateHypothesis(double[][] expectedValues) {
+    protected void calculateHypothesis(double[][] expectedValues) {
         for(int i = 0; i < numDist; i++) {
             double totalExp = 0;
             means[i] = 0;
