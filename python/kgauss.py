@@ -136,24 +136,12 @@ def cdf(data, name):
 
 def main():
     
-    filename = 'temp.txt'
-    """
-    data, means = kmvgauss(3, 100, [[10,50],[50,10]], 2)
-    print data
-    data = [[z[i] for z in data] for i in xrange(2)]
-    plt.plot(data[0], data[1], 'ro')
-    plt.show()"""
+    filename = 'temp.m.2'
     def reformat_data(data):
         return np.array([[z[i] for z in data] for i in xrange(data.shape[1])])
     data, means = kmvgauss(2, 100, [[10, 0], [0, 10]], 2)
     print means
     exportFile(filename, reformat_data(data))
-    #kg = importFile(filename)
-
-    #print normaltest(kg[0])
-    #scatterPlot(kg)
-    # pdf(kg[0], 40, 'x-coordinates')
-    # cdf(kg[0], 'x-coordinates')
     
 if __name__ == "__main__":
     main()

@@ -10,7 +10,7 @@ import numpy as np
 from kgauss import kmvgauss
 from util import timed, importFile, exportFile
 
-# [[x1, y1], [x2, y2]] -> [[x1, x2], [y1, y2]]
+# [[x1, y1], [x2, y2]] <-> [[x1, x2], [y1, y2]]
 def reformat_data(data):
     return np.array([[z[i] for z in data] for i in xrange(data.shape[1])])
 
@@ -30,9 +30,9 @@ def multivariate_expectation_maximization(data, k, covs, means):
         """
         i += 1
         exp_val = calculate_expectation(k, data, means, covs)
-        print exp_val
         means_old, covs_old = means, covs
         means, covs = calculate_hypothesis(k, fdata, exp_val)
+        print means, covs
         for mean in means:
             for m in mean:
                 if isnan(m):
@@ -223,8 +223,27 @@ def test_ppg():
     print 'assertEquals(copyValueFromPython,MultiExpMax.probPoint(' + jpoint,
     print ', ' + jmean + ', ' + jcov +'),1e-330);'
 
+def test_evp():
+    data = importFile('temp.m.1')
+    data = reformat_data(data)
+    means = [[40, -30], [-80, -100]]
+    covs = [[[10, 0], [0, 10]] for i in xrange(2)]
+    for j in xrange(5):
+        i = randint(0, 199)
+        point = data[i]
+        print i, point, expected_value_point(point, 0, means, covs)
+        print i, point, expected_value_point(point, 1, means, covs)
+
+def test_ev():
+    data = importFile('temp.m.1')
+    data = reformat_data(data)
+    means = [[40.0, -30.0], [-80.0, -100.0]] # [[10, -90], [40, -70]] 
+    covs = [[[10, 0], [0, 10]] for i in xrange(2)]
+    print multivariate_expectation_maximization(data, 2, covs, means)
+    # exportFile('temp.ev.2', calculate_expectation(2, data, means, covs))
+
 def main():
-    test()
+    test_ev()
     
 if __name__ == "__main__":
     main()

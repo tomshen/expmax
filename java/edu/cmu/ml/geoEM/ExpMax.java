@@ -39,7 +39,7 @@ public class ExpMax
         Arrays.fill(sigmas, 1.0);
     }
 
-    public double[][] calculateParameters() {
+    protected double[][] calculateParameters() {
         double[] oldMeans = new double[numDist];
         double[] oldSigmas = new double[numDist];
         do {

@@ -1,6 +1,4 @@
 package edu.cmu.ml.geoEM;
-import java.io.IOException;
-import java.util.*;
 
 import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.linear.*;
@@ -13,17 +11,16 @@ public class MultiExpMax
     public int numPoints;
     public double[][] means;
     public RealMatrix[] covs;
-    private double epsilon = 0.01;
+    protected double epsilon = 0.001;
 
     public MultiExpMax(double[][] data, int k) {
         this.data = data;
         dim = data.length;
         numDist = k;
-        numPoints = data.length;
+        numPoints = data[0].length;
         
         means = new double[numDist][dim];
         /* TODO: initialize means */
-        means = new double[][] {{-80.0,40.0,},{-80.0,-10.0,},};
 
         covs = new RealMatrix[numDist];
         for(int i = 0; i < numDist; i++) {
@@ -43,18 +40,18 @@ public class MultiExpMax
             oldMeans = Util.deepcopy(means);
             oldCovs = Util.deepcopy(covs);
             calculateHypothesis(calculateExpectation());
-            System.out.println(Util.arrayToString(covs[0].getData()));
+            System.out.println(Util.matricesToString(covs));
         } while(compare(means, oldMeans) || compare(covs, oldCovs));
-        System.out.println("Done! Means: " + Util.arrayToString(means));
+        System.out.println("Done!");
     }
 
-    private boolean compare(double[][] curr, double[][] old) {
+    protected boolean compare(double[][] curr, double[][] old) {
         if(old == null)
             return true;
         return calcDiff(curr, old) > epsilon;
     }
 
-    private boolean compare(RealMatrix[] curr, RealMatrix[] old) {
+    protected boolean compare(RealMatrix[] curr, RealMatrix[] old) {
         if(old == null)
             return true;
         for(int i = 0; i < curr.length; i++)
@@ -63,27 +60,27 @@ public class MultiExpMax
         return false;
     }
 
-    private double calcDiff(double[][] curr, double[][] old) {    
+    protected double calcDiff(double[][] curr, double[][] old) {    
         double diff = 0.0;
         for(int i = 0; i < curr.length; i++)
             diff += FastMath.pow(calcDiff(curr[i], old[i]), 2.0);
         return FastMath.pow(diff, 0.5);
     }
 
-    private double calcDiff(double[] curr, double[] old) {
+    protected double calcDiff(double[] curr, double[] old) {
         double diff = 0.0;
         for(int i = 0; i < curr.length; i++)
             diff += FastMath.pow(curr[i] - old[i], 2.0);
         return FastMath.pow(diff, 0.5);
     }
 
-    private double[] getPoint(int i) {
+    protected double[] getPoint(int i) {
         double[] point = new double[dim];
             for(int d = 0; d < dim; d++)
                 point[d] = data[d][i];
         return point;
     }
-    private double[][] calculateExpectation() {
+    protected double[][] calculateExpectation() {
         double[][] expectedValues = new double[numDist][numPoints];
         for(int i = 0; i < numDist; i++)
             for(int j = 0; j < numPoints; j++)
@@ -91,7 +88,7 @@ public class MultiExpMax
         return expectedValues;
     }
 
-    private double expectedValuePoint(double[] point, int currDist) {
+    protected double expectedValuePoint(double[] point, int currDist) {
         double probCurrDist = probPoint(point, means[currDist], covs[currDist]);
         double probAllDist = 0;
         for(int i = 0; i < numDist; i++)
@@ -102,49 +99,36 @@ public class MultiExpMax
     }
 
     public static double probPoint(double[] point, 
-                                    double[] means, RealMatrix cov) {
-        MultivariateNormalDistribution dist = 
+                                   double[] means, RealMatrix cov) {
+    	MultivariateNormalDistribution dist = 
             new MultivariateNormalDistribution(means, cov.getData());
         return dist.density(point);
     }
     
-    private void calculateHypothesis(double[][] expectedValues) {
+    protected void calculateHypothesis(double[][] expectedValues) {
         for(int i = 0; i < numDist; i++) {
             double totalExp = 0;
             means[i] = new double[dim];
+            for(int j = 0; j < numPoints; j++)
+                totalExp += expectedValues[i][j];
             covs[i] = new Array2DRowRealMatrix(new double[dim][dim]);
             for(int d = 0; d < dim; d++) {
-                for(int j = 0; j < numPoints; j++) {
+                for(int j = 0; j < numPoints; j++)
                     means[i][d] += expectedValues[i][j] * data[d][j];
-                    totalExp += expectedValues[i][j];
-                }
-            }
-            for(int d = 0; d < dim; d++)
                 means[i][d] /= totalExp;
+            }
             for(int r = 0; r < dim; r++) {
                 for(int c = 0; c < dim; c++) {
+                    double entry = 0;
                     for(int j = 0; j < numPoints; j++) {
-                    	double entry = (expectedValues[i][j]
+                    	entry += (expectedValues[i][j]
                                 * (data[r][j] - means[i][r])
                                 * (data[c][j] - means[i][c]));
-                        covs[i].setEntry(r, c, entry);
                     }
-                    covs[i].setEntry(r, c, covs[i].getEntry(r, c) / 
-                                     (totalExp * (numPoints - 1) / numPoints));
+                    entry = (entry / totalExp) * numPoints / (numPoints - 1);
+                    covs[i].setEntry(r, c, entry);
                 }
             }
         }
-    }
-    
-    public static void main(String args[]) throws IOException {
-    	// Util.exportFile("temp.txt", KGauss.multiVariateKGauss(2, 2, 100));
-        double[][] data = Util.importFile("temp.txt");
-        MultiExpMax em = new MultiExpMax(data, 2);
-        em.calculateParameters();
-         
-        System.out.println("Model means:  " + Util.arrayToString(em.means));
-        for(RealMatrix m : em.covs)
-            System.out.println("Model cov: " 
-                + Util.arrayToString(m.getData()));
     }
 }

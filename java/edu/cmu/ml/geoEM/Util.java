@@ -18,6 +18,13 @@ public abstract class Util {
         }
         return s;
     }
+	
+	public static String matricesToString(RealMatrix[] arr) {
+		String s = "";
+		for(RealMatrix M : arr)
+			s += "Matrix:\n" + arrayToString(M.getData()) + "\n";
+		return s;
+	}
 
     public static double[][] deepcopy(double[][] arr) {
         double[][] arrCopy = new double[arr.length][arr[0].length];
@@ -101,6 +108,12 @@ public abstract class Util {
 	public static void roundArray(double[][] arr) {
 		for(int i = 0; i < arr.length; i++)
 			for(int j = 0; j < arr[0].length; j++)
-				arr[i][j] = round(arr[i][j], 1);
+				arr[i][j] = round(arr[i][j], 3);
+	}
+	
+	public static void roundArray(double[][] arr, int d) {
+		for(int i = 0; i < arr.length; i++)
+			for(int j = 0; j < arr[0].length; j++)
+				arr[i][j] = round(arr[i][j], d);
 	}
 }
