@@ -1,11 +1,8 @@
 package edu.cmu.ml.geoEM;
 
 import static org.junit.Assert.*;
-
 import java.io.IOException;
-
 import org.apache.commons.math3.linear.*;
-
 import org.junit.Test;
 
 public class MultiExpMaxTest {
@@ -25,10 +22,6 @@ public class MultiExpMaxTest {
 	@Test
 	public void testExpectedValuePoint() throws IOException {
 		double[][] data = Util.importFile("temp.m.1");
-		/* Actual means
-		 * [[45.51629172675007, -33.497894049681776], 
-		 * [-80.95252546809463, -98.84212411494822]]
-		 */
 		MultiExpMax em = new MultiExpMax(data, 2);
 		em.means = new double[][] {{40.0, -30.0}, {-80.0, -100.0}};
 		for(int i = 0; i < em.dim; i++)
@@ -59,10 +52,6 @@ public class MultiExpMaxTest {
 	@Test
 	public void testCalculateExpectation() throws IOException {
 		double[][] data = Util.importFile("temp.m.1");
-		/* Actual means
-		 * [[45.51629172675007, -33.497894049681776], 
-		 * [-80.95252546809463, -98.84212411494822]]
-		 */
 		MultiExpMax em = new MultiExpMax(data, 2);
 		em.means = new double[][] {{40.0, -30.0}, {-80.0, -100.0}};
 		for(int i = 0; i < em.dim; i++)
@@ -88,10 +77,6 @@ public class MultiExpMaxTest {
 	@Test
 	public void testCalculateHypothesis() throws IOException {
 		double[][] data = Util.importFile("temp.m.1");
-		/* Actual means
-		 * [[45.51629172675007, -33.497894049681776], 
-		 * [-80.95252546809463, -98.84212411494822]]
-		 */
 		MultiExpMax em = new MultiExpMax(data, 2);
 		em.means = new double[][] {{40.0, -30.0}, {-80.0, -100.0}};
 		for(int i = 0; i < em.dim; i++)
@@ -148,8 +133,6 @@ public class MultiExpMaxTest {
 			em.covs[i] = new Array2DRowRealMatrix(new double[][] 
 					{{10.0, 0.0}, {0.0, 10.0}});
 		em.calculateParameters();
-		System.out.println(Util.arrayToString(em.means));
-		System.out.println(Util.matricesToString(em.covs));
 		assert(!em.compare(em.means, py_means)
 				&& !em.compare(em.covs, py_covs));
 		
@@ -172,8 +155,6 @@ public class MultiExpMaxTest {
 			em.covs[i] = new Array2DRowRealMatrix(new double[][] 
 					{{10.0, 0.0}, {0.0, 10.0}});
 		em.calculateParameters();
-		System.out.println(Util.arrayToString(em.means));
-		System.out.println(Util.matricesToString(em.covs));
 		assert(!em.compare(em.means, py_means)
 			&& !em.compare(em.covs, py_covs));
 	}

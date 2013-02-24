@@ -47,8 +47,9 @@ public class ExpMax
             System.arraycopy(means, 0, oldMeans, 0, means.length);
             System.arraycopy(sigmas, 0, oldSigmas, 0, sigmas.length);
             calculateHypothesis(expectedValues);
-            System.out.println(Arrays.toString(means));
         } while(compare(means, oldMeans) || compare(sigmas, oldSigmas));
+        System.out.println("Model means:  " + Arrays.toString(means));
+        System.out.println("Model sigmas: " + Arrays.toString(sigmas));
         return new double[][] {means, sigmas};
     }
 
@@ -106,8 +107,6 @@ public class ExpMax
     	Util.exportFile("temp.txt", KGauss.kgauss(k, 100, 1, -100, 100, 0.1));
     	double[] data = Util.importFile("temp.txt")[0];
         ExpMax em = new ExpMax(data, k);
-        double[][] params = em.calculateParameters();
-        System.out.println("Model means:  " + Arrays.toString(params[0]));
-        System.out.println("Model sigmas: " + Arrays.toString(params[1]));
+        em.calculateParameters();
     }
 }

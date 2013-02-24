@@ -135,13 +135,16 @@ def cdf(data, name):
     plt.show()
 
 def main():
-    
+    """
     filename = 'temp.m.2'
     def reformat_data(data):
         return np.array([[z[i] for z in data] for i in xrange(data.shape[1])])
     data, means = kmvgauss(2, 100, [[10, 0], [0, 10]], 2)
     print means
     exportFile(filename, reformat_data(data))
+    """
+    data = importFile('toronto_data.txt')
+    scatterPlot(data)
     
 if __name__ == "__main__":
     main()

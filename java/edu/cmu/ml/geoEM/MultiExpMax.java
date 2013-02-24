@@ -40,9 +40,10 @@ public class MultiExpMax
             oldMeans = Util.deepcopy(means);
             oldCovs = Util.deepcopy(covs);
             calculateHypothesis(calculateExpectation());
-            System.out.println(Util.matricesToString(covs));
         } while(compare(means, oldMeans) || compare(covs, oldCovs));
         System.out.println("Done!");
+        System.out.println("Means:\n" + Util.arrayToString(means));
+		System.out.println("Covariances:\n" + Util.matricesToString(covs));
     }
 
     protected boolean compare(double[][] curr, double[][] old) {
