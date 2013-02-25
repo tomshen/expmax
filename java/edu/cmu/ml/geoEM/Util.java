@@ -116,4 +116,12 @@ public abstract class Util {
 			for(int j = 0; j < arr[0].length; j++)
 				arr[i][j] = round(arr[i][j], d);
 	}
+	
+	public static double[] toArray(ArrayList<Double> al) {
+		double[] arr = new double[al.size()];
+		int i = 0;
+		for(double d : al)
+			arr[i++] = d;
+		return arr;
+	}
 }

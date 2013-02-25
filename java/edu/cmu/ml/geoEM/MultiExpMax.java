@@ -3,6 +3,7 @@ package edu.cmu.ml.geoEM;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
+
 public class MultiExpMax
 {
     public double[][] data; // {{x-coordinates}, {y-coordinates}}
@@ -19,8 +20,7 @@ public class MultiExpMax
         numDist = k;
         numPoints = data[0].length;
         
-        means = new double[numDist][dim];
-        /* TODO: initialize means */
+        initializeMeans();
 
         covs = new RealMatrix[numDist];
         for(int i = 0; i < numDist; i++) {
@@ -30,8 +30,49 @@ public class MultiExpMax
                     if(r == c) covs[i].setEntry(r, c, 10.0);
         }
     }
+    
+    private double calculateDistanceSquared(double[] p1, double[] p2) {
+    	assert(p1.length == p2.length);
+    	double sumSquares = 0;
+    	for(int i = 0; i < p1.length; i++)
+    		sumSquares += Math.pow((p1[i] - p2[i]), 2.0);
+    	return sumSquares;
+    }
+    
+    protected void initializeMeans() {
+    	means = new double[numDist][dim];
+		int currDist = 0;
+		double[] weights = new double[numPoints];
+		int meanIndex = (int)(Math.random() * 200.0);
+		for(int i = 0; i < dim; i++)
+			means[currDist][i] = data[i][meanIndex];
+		currDist++;
+		while(currDist < numDist) {
+			double sumDS = 0;
+			for(int i = 0; i < numPoints; i++) {
+				double[] currPoint = new double[dim];
+				for(int j = 0; j < dim; j++)
+					currPoint[j] = data[j][i];
+				weights[i] = calculateDistanceSquared(
+						currPoint, means[currDist]);
+				sumDS += weights[i];
+			}
+			for(int i = 0; i < numPoints; i++)
+				weights[i] /= sumDS;
 
-    public void calculateParameters() {
+			meanIndex = -1;
+			while(meanIndex == -1) {
+				int pointIndex = (int)(Math.random() * 200.0);
+				if(Math.random() < weights[pointIndex])
+					meanIndex = pointIndex;	
+			}
+			for(int i = 0; i < dim; i++)
+				means[currDist][i] = data[i][meanIndex];
+			currDist++;
+		}
+	}
+
+	public void calculateParameters() {
         double[][] oldMeans = new double[numDist][dim];
         RealMatrix[] oldCovs = new RealMatrix[numDist];
         int i = 0;
@@ -40,6 +81,8 @@ public class MultiExpMax
             oldMeans = Util.deepcopy(means);
             oldCovs = Util.deepcopy(covs);
             calculateHypothesis(calculateExpectation());
+            System.out.println(Util.arrayToString(means));
+            System.out.println(Util.matricesToString(covs));
         } while(compare(means, oldMeans) || compare(covs, oldCovs));
         System.out.println("Done!");
         System.out.println("Means:\n" + Util.arrayToString(means));

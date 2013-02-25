@@ -144,7 +144,7 @@ def main():
     exportFile(filename, reformat_data(data))
     """
     data = importFile('toronto_data.txt')
-    scatterPlot(data)
+    scatterPlot([data[1], data[0]])
     
 if __name__ == "__main__":
     main()
