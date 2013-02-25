@@ -107,6 +107,10 @@ def scatterPlot(data):
     plt.xlabel('x-coordinates')
     plt.ylabel('y-coordinates')
     plt.title('Toy Data for 2 gaussian distributions')
+    im = plt.imread('world.png')
+    plt.xlim([-180, 180])
+    plt.ylim([-90, 90])
+    plt.imshow(im, extent=[-180, 180, -90, 90])
     plt.plot(data[0], data[1], 'ro')
     plt.show()
 
