@@ -103,9 +103,9 @@ public class ExpMax
         }
     }
     public static void main(String args[]) throws IOException {
-    	int k = 3;
-    	Util.exportFile("temp.txt", KGauss.kgauss(k, 100, 1, -100, 100, 0.1));
-    	double[] data = Util.importFile("temp.txt")[0];
+        int k = 3;
+        Util.exportFile("temp.txt", KGauss.kgauss(k, 100, 1, -100, 100, 0.1));
+        double[] data = Util.importFile("temp.txt")[0];
         ExpMax em = new ExpMax(data, k);
         em.calculateParameters();
     }

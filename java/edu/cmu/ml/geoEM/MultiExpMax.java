@@ -32,47 +32,47 @@ public class MultiExpMax
     }
     
     private double calculateDistanceSquared(double[] p1, double[] p2) {
-    	assert(p1.length == p2.length);
-    	double sumSquares = 0;
-    	for(int i = 0; i < p1.length; i++)
-    		sumSquares += Math.pow((p1[i] - p2[i]), 2.0);
-    	return sumSquares;
+        assert(p1.length == p2.length);
+        double sumSquares = 0;
+        for(int i = 0; i < p1.length; i++)
+            sumSquares += Math.pow((p1[i] - p2[i]), 2.0);
+        return sumSquares;
     }
     
     protected void initializeMeans() {
-    	means = new double[numDist][dim];
-		int currDist = 0;
-		double[] weights = new double[numPoints];
-		int meanIndex = (int)(Math.random() * 200.0);
-		for(int i = 0; i < dim; i++)
-			means[currDist][i] = data[i][meanIndex];
-		currDist++;
-		while(currDist < numDist) {
-			double sumDS = 0;
-			for(int i = 0; i < numPoints; i++) {
-				double[] currPoint = new double[dim];
-				for(int j = 0; j < dim; j++)
-					currPoint[j] = data[j][i];
-				weights[i] = calculateDistanceSquared(
-						currPoint, means[currDist]);
-				sumDS += weights[i];
-			}
-			for(int i = 0; i < numPoints; i++)
-				weights[i] /= sumDS;
+        means = new double[numDist][dim];
+        int currDist = 0;
+        double[] weights = new double[numPoints];
+        int meanIndex = (int)(Math.random() * 200.0);
+        for(int i = 0; i < dim; i++)
+            means[currDist][i] = data[i][meanIndex];
+        currDist++;
+        while(currDist < numDist) {
+            double sumDS = 0;
+            for(int i = 0; i < numPoints; i++) {
+                double[] currPoint = new double[dim];
+                for(int j = 0; j < dim; j++)
+                    currPoint[j] = data[j][i];
+                weights[i] = calculateDistanceSquared(
+                        currPoint, means[currDist]);
+                sumDS += weights[i];
+            }
+            for(int i = 0; i < numPoints; i++)
+                weights[i] /= sumDS;
 
-			meanIndex = -1;
-			while(meanIndex == -1) {
-				int pointIndex = (int)(Math.random() * 200.0);
-				if(Math.random() < weights[pointIndex])
-					meanIndex = pointIndex;	
-			}
-			for(int i = 0; i < dim; i++)
-				means[currDist][i] = data[i][meanIndex];
-			currDist++;
-		}
-	}
+            meanIndex = -1;
+            while(meanIndex == -1) {
+                int pointIndex = (int)(Math.random() * 200.0);
+                if(Math.random() < weights[pointIndex])
+                    meanIndex = pointIndex; 
+            }
+            for(int i = 0; i < dim; i++)
+                means[currDist][i] = data[i][meanIndex];
+            currDist++;
+        }
+    }
 
-	public void calculateParameters() {
+    public void calculateParameters() {
         double[][] oldMeans = new double[numDist][dim];
         RealMatrix[] oldCovs = new RealMatrix[numDist];
         int i = 0;
@@ -86,7 +86,7 @@ public class MultiExpMax
         } while(compare(means, oldMeans) || compare(covs, oldCovs));
         System.out.println("Done!");
         System.out.println("Means:\n" + Util.arrayToString(means));
-		System.out.println("Covariances:\n" + Util.matricesToString(covs));
+        System.out.println("Covariances:\n" + Util.matricesToString(covs));
     }
 
     protected boolean compare(double[][] curr, double[][] old) {
@@ -144,7 +144,7 @@ public class MultiExpMax
 
     public static double probPoint(double[] point, 
                                    double[] means, RealMatrix cov) {
-    	MultivariateNormalDistribution dist = 
+        MultivariateNormalDistribution dist = 
             new MultivariateNormalDistribution(means, cov.getData());
         return dist.density(point);
     }
@@ -165,7 +165,7 @@ public class MultiExpMax
                 for(int c = 0; c < dim; c++) {
                     double entry = 0;
                     for(int j = 0; j < numPoints; j++) {
-                    	entry += (expectedValues[i][j]
+                        entry += (expectedValues[i][j]
                                 * (data[r][j] - means[i][r])
                                 * (data[c][j] - means[i][c]));
                     }

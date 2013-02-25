@@ -5,34 +5,34 @@ import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 
 public class KGauss
 {
-	public static double[][] multiVariateKGauss(int k, int dim, int n) {
-		double[][] data = new double[dim][n * k];
-		int count = 0;
-		double[][] means = new double[k][];
-		for(int i = 0; i < k; i++) {
-			double[] mean = new double[dim];
-			for(int j = 0; j < dim; j++)
-				mean[j] = 100 - 200 * Math.random();
-			double[][] cov = new double[dim][dim];
+    public static double[][] multiVariateKGauss(int k, int dim, int n) {
+        double[][] data = new double[dim][n * k];
+        int count = 0;
+        double[][] means = new double[k][];
+        for(int i = 0; i < k; i++) {
+            double[] mean = new double[dim];
+            for(int j = 0; j < dim; j++)
+                mean[j] = 100 - 200 * Math.random();
+            double[][] cov = new double[dim][dim];
             for(int r = 0; r < dim; r++)
                 for(int c = 0; c < dim; c++)
                     if(r == c) cov[r][c] = 10.0;
 
-			MultivariateNormalDistribution dist = 
-		            new MultivariateNormalDistribution(mean, cov);
-			
-			for(int l = 0; l < n; l++) {
-				double[] point = dist.sample();
-				for(int d = 0; d < dim; d++)
-					data[d][count] = point[d];
-				count++;
-			}
-			means[i] = mean;
-		}
-		System.out.println(Util.arrayToString(means));
-		return data;
-	}
-	
+            MultivariateNormalDistribution dist = 
+                    new MultivariateNormalDistribution(mean, cov);
+            
+            for(int l = 0; l < n; l++) {
+                double[] point = dist.sample();
+                for(int d = 0; d < dim; d++)
+                    data[d][count] = point[d];
+                count++;
+            }
+            means[i] = mean;
+        }
+        System.out.println(Util.arrayToString(means));
+        return data;
+    }
+    
     public static double[] ngauss(double mu, double sigma, int n) {
         double[] data = new double[n];
         int i = 0;

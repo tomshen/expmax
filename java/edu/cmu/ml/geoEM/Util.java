@@ -8,7 +8,7 @@ import java.util.*;
 import org.apache.commons.math3.linear.*;
 
 public abstract class Util {
-	public static String arrayToString(double[][] arr) {
+    public static String arrayToString(double[][] arr) {
         String s = "";
         for(double[] da : arr) {
             for(double d : da)
@@ -18,13 +18,13 @@ public abstract class Util {
         }
         return s;
     }
-	
-	public static String matricesToString(RealMatrix[] arr) {
-		String s = "";
-		for(RealMatrix M : arr)
-			s += "Matrix:\n" + arrayToString(M.getData()) + "\n";
-		return s;
-	}
+    
+    public static String matricesToString(RealMatrix[] arr) {
+        String s = "";
+        for(RealMatrix M : arr)
+            s += "Matrix:\n" + arrayToString(M.getData()) + "\n";
+        return s;
+    }
 
     public static double[][] deepcopy(double[][] arr) {
         double[][] arrCopy = new double[arr.length][arr[0].length];
@@ -39,38 +39,38 @@ public abstract class Util {
             arrCopy[i] = arr[i].copy();
         return arrCopy;
     }
-	
-	public static double[][] stringToArray(String s) {
+    
+    public static double[][] stringToArray(String s) {
         String[] s1 = s.split("\n");
         ArrayList<ArrayList<Double>> dl = new ArrayList<ArrayList<Double>>();
         for(int i = 0; i < s1.length; i++) {
-        	dl.add(new ArrayList<Double>());
-        	for(String entry: s1[i].split(" ")) {
-        		dl.get(i).add(Double.parseDouble(entry));
-        	}
+            dl.add(new ArrayList<Double>());
+            for(String entry: s1[i].split(" ")) {
+                dl.get(i).add(Double.parseDouble(entry));
+            }
         }
         double[][] arr = new double[dl.size()][dl.get(0).size()];
         for(int r = 0; r < dl.size(); r++) {
-        	for(int c = 0; c < dl.get(0).size(); c++) {
-        		arr[r][c] = dl.get(r).get(c);
-        	}
+            for(int c = 0; c < dl.get(0).size(); c++) {
+                arr[r][c] = dl.get(r).get(c);
+            }
         }
         return arr;
     }
-	
-	public static double[][] importFile(String filename) throws IOException {
-		FileInputStream stream = new FileInputStream(new File(filename));
-		try {
-		    FileChannel fc = stream.getChannel();
-		    MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
-		    return stringToArray(Charset.defaultCharset().decode(bb).toString());
-		}
-		finally {
-			stream.close();
-		}
-	}
-	
-	public static String exportFile(String filename, double[][] data) {
+    
+    public static double[][] importFile(String filename) throws IOException {
+        FileInputStream stream = new FileInputStream(new File(filename));
+        try {
+            FileChannel fc = stream.getChannel();
+            MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
+            return stringToArray(Charset.defaultCharset().decode(bb).toString());
+        }
+        finally {
+            stream.close();
+        }
+    }
+    
+    public static String exportFile(String filename, double[][] data) {
         File outFile = new File(filename);
         BufferedWriter writer = null;
         try
@@ -96,32 +96,32 @@ public abstract class Util {
          }
          return filename;
     }
-	
-	public static double round(double d, int i) {
-		String s = "#.";
-		while(i-- > 0)
-			s += "#";
+    
+    public static double round(double d, int i) {
+        String s = "#.";
+        while(i-- > 0)
+            s += "#";
         DecimalFormat twoDForm = new DecimalFormat(s);
         return Double.valueOf(twoDForm.format(d));
-	}
-	
-	public static void roundArray(double[][] arr) {
-		for(int i = 0; i < arr.length; i++)
-			for(int j = 0; j < arr[0].length; j++)
-				arr[i][j] = round(arr[i][j], 3);
-	}
-	
-	public static void roundArray(double[][] arr, int d) {
-		for(int i = 0; i < arr.length; i++)
-			for(int j = 0; j < arr[0].length; j++)
-				arr[i][j] = round(arr[i][j], d);
-	}
-	
-	public static double[] toArray(ArrayList<Double> al) {
-		double[] arr = new double[al.size()];
-		int i = 0;
-		for(double d : al)
-			arr[i++] = d;
-		return arr;
-	}
+    }
+    
+    public static void roundArray(double[][] arr) {
+        for(int i = 0; i < arr.length; i++)
+            for(int j = 0; j < arr[0].length; j++)
+                arr[i][j] = round(arr[i][j], 3);
+    }
+    
+    public static void roundArray(double[][] arr, int d) {
+        for(int i = 0; i < arr.length; i++)
+            for(int j = 0; j < arr[0].length; j++)
+                arr[i][j] = round(arr[i][j], d);
+    }
+    
+    public static double[] toArray(ArrayList<Double> al) {
+        double[] arr = new double[al.size()];
+        int i = 0;
+        for(double d : al)
+            arr[i++] = d;
+        return arr;
+    }
 }
