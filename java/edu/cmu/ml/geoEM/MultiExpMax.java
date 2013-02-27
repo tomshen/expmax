@@ -13,22 +13,17 @@ public class MultiExpMax
     public double[][] means;
     public RealMatrix[] covs;
     protected double epsilon = 0.001;
+    
+    private MultivariateNormalDistribution[] dists;
 
     public MultiExpMax(double[][] data, int k) {
         this.data = data;
         dim = data.length;
         numDist = k;
         numPoints = data[0].length;
-        
+        dists = new MultivariateNormalDistribution[numDist];
         initializeMeans();
-
-        covs = new RealMatrix[numDist];
-        for(int i = 0; i < numDist; i++) {
-            covs[i] = new Array2DRowRealMatrix(new double[dim][dim]);
-            for(int r = 0; r < dim; r++)
-                for(int c = 0; c < dim; c++)
-                    if(r == c) covs[i].setEntry(r, c, 10.0);
-        }
+        initializeCovs();
     }
     
     private double calculateDistanceSquared(double[] p1, double[] p2) {
@@ -48,6 +43,27 @@ public class MultiExpMax
             means[currDist][i] = data[i][meanIndex];
         currDist++;
         while(currDist < numDist) {
+        	double sumDS = 0;
+            for(int i = 0; i < numPoints; i++) {
+                double[] currPoint = new double[dim];
+                for(int j = 0; j < dim; j++)
+                    currPoint[j] = data[j][i];
+                weights[i] = calculateDistanceSquared(
+                        currPoint, means[currDist]);
+                sumDS += weights[i];
+            }
+            for(int i = 0; i < numPoints; i++)
+                weights[i] /= sumDS;
+            double r = Math.random();
+            meanIndex = 0;
+            double partialSum = 0;
+        	while(r < partialSum)
+        		partialSum += weights[meanIndex++];
+        	weights[meanIndex] = 0;
+        	for(int i = 0; i < dim; i++)
+                means[currDist][i] = data[i][meanIndex];
+            currDist++;
+        	/*
             double sumDS = 0;
             for(int i = 0; i < numPoints; i++) {
                 double[] currPoint = new double[dim];
@@ -69,23 +85,41 @@ public class MultiExpMax
             for(int i = 0; i < dim; i++)
                 means[currDist][i] = data[i][meanIndex];
             currDist++;
+            */
+        }
+    }
+    
+    protected void initializeCovs() {
+    	covs = new RealMatrix[numDist];
+        for(int i = 0; i < numDist; i++) {
+            covs[i] = new Array2DRowRealMatrix(new double[dim][dim]);
+            for(int r = 0; r < dim; r++)
+                for(int c = 0; c < dim; c++)
+                    if(r == c) covs[i].setEntry(r, c, 10.0);
         }
     }
 
     public void calculateParameters() {
         double[][] oldMeans = new double[numDist][dim];
         RealMatrix[] oldCovs = new RealMatrix[numDist];
-        int i = 0;
+        int iterations = 0;
+        long startTime = System.currentTimeMillis();
         do {
-            System.out.println("iteration " + i++);
             oldMeans = Util.deepcopy(means);
             oldCovs = Util.deepcopy(covs);
             calculateHypothesis(calculateExpectation());
-            System.out.println(Util.arrayToString(means));
-            System.out.println(Util.matricesToString(covs));
+            iterations++;
         } while(compare(means, oldMeans) || compare(covs, oldCovs));
-        System.out.println("Done!");
-        System.out.println("Means:\n" + Util.arrayToString(means));
+        System.out.println("EM complete! Took " 
+        				   + iterations + " iterations and "
+        				   + Double.toString((System.currentTimeMillis() 
+        						   			 - startTime) / 1000.0)
+        				   + " seconds");
+        printParameters();
+    }
+    
+    public void printParameters() {
+    	System.out.println("Means:\n" + Util.arrayToString(means));
         System.out.println("Covariances:\n" + Util.matricesToString(covs));
     }
 
@@ -124,8 +158,15 @@ public class MultiExpMax
                 point[d] = data[d][i];
         return point;
     }
+    protected void createDists() {
+    	for(int i = 0; i < numDist; i++)
+    		dists[i] = new MultivariateNormalDistribution(
+    				means[i], 
+    				covs[i].getData());
+    }
     protected double[][] calculateExpectation() {
         double[][] expectedValues = new double[numDist][numPoints];
+        createDists();
         for(int i = 0; i < numDist; i++)
             for(int j = 0; j < numPoints; j++)
                 expectedValues[i][j] = expectedValuePoint(getPoint(j), i);
@@ -133,10 +174,10 @@ public class MultiExpMax
     }
 
     protected double expectedValuePoint(double[] point, int currDist) {
-        double probCurrDist = probPoint(point, means[currDist], covs[currDist]);
+        double probCurrDist = probPoint(point, currDist);
         double probAllDist = 0;
         for(int i = 0; i < numDist; i++)
-            probAllDist += probPoint(point, means[i], covs[i]);
+            probAllDist += probPoint(point, i);
         if(probAllDist == 0)
             return 0;
         return probCurrDist / probAllDist;
@@ -147,6 +188,10 @@ public class MultiExpMax
         MultivariateNormalDistribution dist = 
             new MultivariateNormalDistribution(means, cov.getData());
         return dist.density(point);
+    }
+    
+    private double probPoint(double[] point, int currDist) {
+    	return dists[currDist].density(point);
     }
     
     protected void calculateHypothesis(double[][] expectedValues) {

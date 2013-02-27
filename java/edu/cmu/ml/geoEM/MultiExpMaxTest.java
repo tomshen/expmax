@@ -41,6 +41,7 @@ public class MultiExpMaxTest {
         for(int i = 0; i < em.dim; i++)
             em.covs[i] = new Array2DRowRealMatrix(new double[][] 
                     {{10.0, 0.0}, {0.0, 10.0}});
+        em.createDists();
         assertEquals(1.0, em.expectedValuePoint(
                 new double[] {44.04817172, -35.24967494}, 0), 1e-10);
         assertEquals(0.0, em.expectedValuePoint(
@@ -213,9 +214,11 @@ public class MultiExpMaxTest {
     @Test
     public void testToronto() throws IOException {
         double[][] data = Util.importFile("toronto_data.txt");
+        long start = System.currentTimeMillis();
         MultiExpMax em = new MultiExpMax(data, 2);
         // em.means = new double[][] {{40, -80}, {50, 0}};
         em.calculateParameters();
+        System.err.println(System.currentTimeMillis() - start);
         double[] mean = em.means[0];
         RealMatrix cov = em.covs[0];
         /* testing hard-coded version of removing large clusters
@@ -239,9 +242,9 @@ public class MultiExpMaxTest {
         };
         
         MultiExpMax em2 = new MultiExpMax(newData, 1);
-        em2.means[0] = new double[] {40.0, 50.0};
-        em2.covs[0] = new Array2DRowRealMatrix(new double[][] 
-                {{30.0, 0.0}, {0.0, 30.0}});
+        //em2.means[0] = new double[] {40.0, 50.0};
+        //em2.covs[0] = new Array2DRowRealMatrix(new double[][] 
+                //{{30.0, 0.0}, {0.0, 30.0}});
         em2.calculateParameters();
     }
 }
