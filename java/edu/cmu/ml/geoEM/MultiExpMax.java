@@ -1,5 +1,7 @@
 package edu.cmu.ml.geoEM;
 
+import java.util.Arrays;
+
 import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
@@ -12,7 +14,7 @@ public class MultiExpMax
     public int numPoints;
     public double[][] means;
     public RealMatrix[] covs;
-    protected double epsilon = 0.001;
+    protected static double epsilon = 0.001;
     
     private MultivariateNormalDistribution[] dists;
 
@@ -38,7 +40,7 @@ public class MultiExpMax
         means = new double[numDist][dim];
         int currDist = 0;
         double[] weights = new double[numPoints];
-        int meanIndex = (int)(Math.random() * 200.0);
+        int meanIndex = (int)(Math.random() * numPoints);
         for(int i = 0; i < dim; i++)
             means[currDist][i] = data[i][meanIndex];
         currDist++;
@@ -49,43 +51,22 @@ public class MultiExpMax
                 for(int j = 0; j < dim; j++)
                     currPoint[j] = data[j][i];
                 weights[i] = calculateDistanceSquared(
-                        currPoint, means[currDist]);
+                        currPoint, means[currDist - 1]);
                 sumDS += weights[i];
             }
             for(int i = 0; i < numPoints; i++)
                 weights[i] /= sumDS;
             double r = Math.random();
-            meanIndex = 0;
             double partialSum = 0;
-        	while(r < partialSum)
-        		partialSum += weights[meanIndex++];
+            for(meanIndex = 0; meanIndex < numPoints; meanIndex++) {
+            	partialSum += weights[meanIndex++];
+            	if(partialSum < r)
+            		break;
+            }
         	weights[meanIndex] = 0;
         	for(int i = 0; i < dim; i++)
                 means[currDist][i] = data[i][meanIndex];
             currDist++;
-        	/*
-            double sumDS = 0;
-            for(int i = 0; i < numPoints; i++) {
-                double[] currPoint = new double[dim];
-                for(int j = 0; j < dim; j++)
-                    currPoint[j] = data[j][i];
-                weights[i] = calculateDistanceSquared(
-                        currPoint, means[currDist]);
-                sumDS += weights[i];
-            }
-            for(int i = 0; i < numPoints; i++)
-                weights[i] /= sumDS;
-
-            meanIndex = -1;
-            while(meanIndex == -1) {
-                int pointIndex = (int)(Math.random() * 200.0);
-                if(Math.random() < weights[pointIndex])
-                    meanIndex = pointIndex; 
-            }
-            for(int i = 0; i < dim; i++)
-                means[currDist][i] = data[i][meanIndex];
-            currDist++;
-            */
         }
     }
     
@@ -110,7 +91,8 @@ public class MultiExpMax
             calculateHypothesis(calculateExpectation());
             iterations++;
         } while(compare(means, oldMeans) || compare(covs, oldCovs));
-        System.out.println("EM complete! Took " 
+        System.out.println("EM with " + numDist 
+        				   + " clusters complete! Took " 
         				   + iterations + " iterations and "
         				   + Double.toString((System.currentTimeMillis() 
         						   			 - startTime) / 1000.0)
@@ -123,13 +105,13 @@ public class MultiExpMax
         System.out.println("Covariances:\n" + Util.matricesToString(covs));
     }
 
-    protected boolean compare(double[][] curr, double[][] old) {
+    protected static boolean compare(double[][] curr, double[][] old) {
         if(old == null)
             return true;
         return calcDiff(curr, old) > epsilon;
     }
 
-    protected boolean compare(RealMatrix[] curr, RealMatrix[] old) {
+    protected static boolean compare(RealMatrix[] curr, RealMatrix[] old) {
         if(old == null)
             return true;
         for(int i = 0; i < curr.length; i++)
@@ -138,14 +120,14 @@ public class MultiExpMax
         return false;
     }
 
-    protected double calcDiff(double[][] curr, double[][] old) {    
+    protected static double calcDiff(double[][] curr, double[][] old) {    
         double diff = 0.0;
         for(int i = 0; i < curr.length; i++)
             diff += FastMath.pow(calcDiff(curr[i], old[i]), 2.0);
         return FastMath.pow(diff, 0.5);
     }
 
-    protected double calcDiff(double[] curr, double[] old) {
+    protected static double calcDiff(double[] curr, double[] old) {
         double diff = 0.0;
         for(int i = 0; i < curr.length; i++)
             diff += FastMath.pow(curr[i] - old[i], 2.0);

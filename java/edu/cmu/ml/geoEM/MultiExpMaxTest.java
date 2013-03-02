@@ -211,12 +211,12 @@ public class MultiExpMaxTest {
             && !em.compare(em.covs, py_covs));
     }
     
-    @Test
-    public void testToronto() throws IOException {
+    @SuppressWarnings("static-access")
+	@Test
+    public void testTorontoRemoveMean() throws IOException {
         double[][] data = Util.importFile("toronto_data.txt");
         long start = System.currentTimeMillis();
         MultiExpMax em = new MultiExpMax(data, 2);
-        // em.means = new double[][] {{40, -80}, {50, 0}};
         em.calculateParameters();
         System.err.println(System.currentTimeMillis() - start);
         double[] mean = em.means[0];
@@ -246,5 +246,25 @@ public class MultiExpMaxTest {
         //em2.covs[0] = new Array2DRowRealMatrix(new double[][] 
                 //{{30.0, 0.0}, {0.0, 30.0}});
         em2.calculateParameters();
+    }
+    
+    @Test
+    public void testToronto() throws IOException {
+        double[][] data = Util.importFile("toronto_data.txt");
+        for(int k = 6; k < 10; k++) {
+	        try {
+	        	MultiExpMax em = new MultiExpMax(data, k);
+	        	em.calculateParameters();
+	        }
+	        catch(NonPositiveDefiniteMatrixException |
+	        	  SingularMatrixException ex) {
+	        	continue;
+	        }
+        }
+        
+    }
+    public static void main(String args[]) throws IOException {
+    	MultiExpMaxTest m = new MultiExpMaxTest();
+    	m.testToronto();
     }
 }
