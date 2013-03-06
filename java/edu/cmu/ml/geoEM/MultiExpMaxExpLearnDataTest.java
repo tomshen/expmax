@@ -2,6 +2,7 @@ package edu.cmu.ml.geoEM;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import org.junit.Test;
@@ -13,13 +14,26 @@ import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 public class MultiExpMaxExpLearnDataTest {
 	static double epsilon = 1.0;
 	
+	@Test
+	public void testDistributionUniform() {
+		double[][] dists = new double[][]
+				{{0.25, 0.25, 0.25, 0.25},
+				 {1.0, 0, 0, 0},
+				 {0.5, 0.3, 0.2, 0.1},
+				 {0.3, 0.2, 0.25, 0.25}};
+		assert(MultiExpMaxExpLearn.distributionUniform(dists[0]));
+		assert(!MultiExpMaxExpLearn.distributionUniform(dists[1]));
+		assert(!MultiExpMaxExpLearn.distributionUniform(dists[2]));
+		assert(MultiExpMaxExpLearn.distributionUniform(dists[3]));
+	}
+	
 	protected static boolean compareArrays(ArrayList<Double[]> curr, ArrayList<Double[]> old) {
         if(old == null)
             return true;
         for(int i = 0; i < curr.size(); i++)
             if (MultiExpMaxExpLearn.calcDiff(curr.get(i), old.get(i)) > epsilon)
-                return true;
-        return false;
+                return false;
+        return true;
     }
 	
 	protected static boolean compareArrays(ArrayList<Double[]> curr, double[][] old) {
@@ -27,8 +41,8 @@ public class MultiExpMaxExpLearnDataTest {
             return true;
         for(int i = 0; i < curr.size(); i++)
             if (MultiExpMaxExpLearn.calcDiff(curr.get(i), old[i]) > epsilon)
-                return true;
-        return false;
+                return false;
+        return true;
     }
 	
 	private static boolean compare(double[][] actual, 
@@ -58,7 +72,7 @@ public class MultiExpMaxExpLearnDataTest {
 				currPoint++;
 			}
 		}
-		MultiExpMaxExpLearn em = new MultiExpMaxExpLearn(data, numDist, numDist * 2);
+		MultiExpMaxExpLearn em = new MultiExpMaxExpLearn(data, numDist, 2*numDist);
 		System.out.println("\nEm with k=" + numDist 
 				   + " and n=" + numPoints);
 		em.calculateParameters();
@@ -93,7 +107,7 @@ public class MultiExpMaxExpLearnDataTest {
 				currPoint++;
 			}
 		}
-		MultiExpMaxExpLearn em = new MultiExpMaxExpLearn(data, numDist, numDist * 2);
+		MultiExpMaxExpLearn em = new MultiExpMaxExpLearn(data, numDist, 2*numDist);
 		System.out.println("\nEm with k=" + numDist 
 						   + " and n=" + numPoints);
 		em.calculateParameters();
@@ -124,7 +138,7 @@ public class MultiExpMaxExpLearnDataTest {
 				currPoint++;
 			}
 		}
-		MultiExpMaxExpLearn em = new MultiExpMaxExpLearn(data, numDist, numDist * 2);
+		MultiExpMaxExpLearn em = new MultiExpMaxExpLearn(data, numDist, 2*numDist);
 		System.out.println("\nEm with k=" + numDist 
 				   + " and n=" + numPoints);
 		em.calculateParameters();
@@ -173,4 +187,12 @@ public class MultiExpMaxExpLearnDataTest {
 		testRunSmallCov(2, 10);
 		testRunSmallCov(3, 10);
 	}
+	
+	@Test
+    public void testToronto() throws IOException {
+        double[][] data = Util.importFile("toronto_data.txt");
+    	MultiExpMaxExpLearn em = new MultiExpMaxExpLearn(data, 5, 5);
+    	em.calculateParameters();
+        
+    }
 }

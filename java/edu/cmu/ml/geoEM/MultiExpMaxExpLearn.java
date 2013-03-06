@@ -17,6 +17,7 @@ public class MultiExpMaxExpLearn
     public ArrayList<Double[]> means;
     public ArrayList<RealMatrix> covs;
     protected static double epsilon = 0.001;
+    protected static int minPointsCluster = 2; // minimum # points in a cluster
     
     private ArrayList<MultivariateNormalDistribution> dists;
 
@@ -27,6 +28,7 @@ public class MultiExpMaxExpLearn
         minDist = kmin;
         maxDist = kmax;
         numPoints = data[0].length;
+        minPointsCluster = numPoints / maxDist;
         initializeMeans();
         initializeCovs();
     }
@@ -74,6 +76,7 @@ public class MultiExpMaxExpLearn
             means.get(currDist)[i] = data[i][meanIndex];
         currDist++;
         while(currDist < means.size()) {
+        	/* DOESN'T WORK
         	double sumDS = 0;
             for(int i = 0; i < numPoints; i++) {
                 double[] currPoint = new double[dim];
@@ -94,6 +97,28 @@ public class MultiExpMaxExpLearn
             }
         	weights[meanIndex] = 0;
         	for(int i = 0; i < dim; i++)
+                means.get(currDist)[i] = data[i][meanIndex];
+            currDist++;
+            */
+        	double sumDS = 0;
+            for(int i = 0; i < numPoints; i++) {
+                double[] currPoint = new double[dim];
+                for(int j = 0; j < dim; j++)
+                    currPoint[j] = data[j][i];
+                weights[i] = calculateDistanceSquared(
+                        currPoint, means.get(currDist - 1));
+                sumDS += weights[i];
+            }
+            for(int i = 0; i < numPoints; i++)
+                weights[i] /= sumDS;
+
+            meanIndex = -1;
+            while(meanIndex == -1) {
+                int pointIndex = (int)(Math.random() * numPoints);
+                if(Math.random() < weights[pointIndex])
+                    meanIndex = pointIndex; 
+            }
+            for(int i = 0; i < dim; i++)
                 means.get(currDist)[i] = data[i][meanIndex];
             currDist++;
         }
@@ -130,7 +155,9 @@ public class MultiExpMaxExpLearn
     }
     
     public void printParameters() {
-    	System.out.println("Means:\n" + means.toString());
+    	System.out.println("Means:");
+    	for(Double[] d : means)
+    		System.out.println(Arrays.toString(Util.doubleObjectToPrimitiveArray(d)));
         System.out.println("Covariances:\n" + Util.matricesToString(covs));
     }
 
@@ -202,6 +229,14 @@ public class MultiExpMaxExpLearn
                 point[d] = data[d][i];
         return point;
     }
+    
+    protected Double[] getPointObj(int i) {
+        Double[] point = new Double[dim];
+            for(int d = 0; d < dim; d++)
+                point[d] = data[d][i];
+        return point;
+    }
+    
     protected void createDists() {
     	dists = new ArrayList<MultivariateNormalDistribution>();
     	for(int i = 0; i < means.size(); i++)
@@ -209,6 +244,23 @@ public class MultiExpMaxExpLearn
     				Util.doubleObjectToPrimitiveArray(means.get(i)), 
     				covs.get(i).getData()));
     }
+    
+    protected static boolean distributionUniform(Double[] dist) {
+    	return distributionUniform(Util.doubleObjectToPrimitiveArray(dist));
+    }
+    
+    protected static boolean distributionUniform(double[] dist) {
+    	double min = dist[0];
+    	double max = 0;
+    	for(double d : dist) {
+    		if(d < min)
+    			min = d;
+    		else if(d > max)
+    			max = d;
+    	}
+    	return max < 2 * min;
+    }
+    
     protected ArrayList<Double[]> calculateExpectation() {
         ArrayList<Double[]> expectedValues = new ArrayList<Double[]>();
         createDists();
@@ -216,6 +268,57 @@ public class MultiExpMaxExpLearn
         	expectedValues.add(new Double[numPoints]);
         	for(int j = 0; j < numPoints; j++)
                 expectedValues.get(i)[j] = expectedValuePoint(getPoint(j), i);
+        }
+        int oldSize = expectedValues.size();
+        if(expectedValues.size() < maxDist) {
+	    	for(int i = 0 ; i < numPoints; i++) {
+	    		if(expectedValues.size() >= maxDist)
+	    			break;
+	    		double[] dist = new double[expectedValues.size()];
+	    		for(int j = 0; j < expectedValues.size(); j++) {
+	    			dist[j] = expectedValues.get(j)[i].doubleValue();
+	    		}
+	    		if(distributionUniform(dist)) {
+	    			System.err.println("ADDING DIST");
+	    			means.add(getPointObj(i));
+	    			covs.add(new Array2DRowRealMatrix(new double[dim][dim]));
+	                for(int r = 0; r < dim; r++)
+	                    for(int c = 0; c < dim; c++)
+	                        if(r == c)
+	                        	covs.get(covs.size() - 1).setEntry(r, c, 10.0);
+	                dists.add(new MultivariateNormalDistribution(
+	        				Util.doubleObjectToPrimitiveArray(means.get(means.size() - 1)), 
+	        				covs.get(covs.size() - 1).getData()));
+	        		expectedValues.add(new Double[numPoints]);
+	        		for(int k = 0; k < numPoints; k++)
+	                    expectedValues.get(expectedValues.size() - 1)[k] = 
+	                    	expectedValuePoint(getPoint(k), expectedValues.size() - 1);
+	        		for(Double[] da : expectedValues)
+	        			da[i] = 0.0;
+	        		expectedValues.get(expectedValues.size() - 1)[i] = 1.0;
+	    		}
+	    	}
+        }
+        if(expectedValues.size() > oldSize) {
+	    	int currDist = 0;
+	    	while(currDist < expectedValues.size()) {
+	    		Double[] probs = expectedValues.get(currDist);
+	    		int pointsCluster = 0;
+	    		for(int i = 0; i < numPoints; i++) {
+	    			if(probs[i] > epsilon)
+	    				pointsCluster++;
+	    		}
+	    		if(pointsCluster < minPointsCluster) {
+	    			if(expectedValues.size() <= minDist)
+	    				break;
+	    			System.err.println("REMOVING DIST");
+	    			means.remove(currDist);
+	    			covs.remove(currDist);
+	    			dists.remove(currDist);
+	    			expectedValues.remove(currDist);
+	    		}
+	    		else currDist++;
+	    	}
         }
         return expectedValues;
     }

@@ -45,6 +45,7 @@ public class MultiExpMax
             means[currDist][i] = data[i][meanIndex];
         currDist++;
         while(currDist < numDist) {
+        	/* DOESN'T QUITE WORK
         	double sumDS = 0;
             for(int i = 0; i < numPoints; i++) {
                 double[] currPoint = new double[dim];
@@ -65,6 +66,28 @@ public class MultiExpMax
             }
         	weights[meanIndex] = 0;
         	for(int i = 0; i < dim; i++)
+                means[currDist][i] = data[i][meanIndex];
+            currDist++;
+            */
+        	double sumDS = 0;
+            for(int i = 0; i < numPoints; i++) {
+                double[] currPoint = new double[dim];
+                for(int j = 0; j < dim; j++)
+                    currPoint[j] = data[j][i];
+                weights[i] = calculateDistanceSquared(
+                        currPoint, means[currDist - 1]);
+                sumDS += weights[i];
+            }
+            for(int i = 0; i < numPoints; i++)
+                weights[i] /= sumDS;
+
+            meanIndex = -1;
+            while(meanIndex == -1) {
+                int pointIndex = (int)(Math.random() * numPoints);
+                if(Math.random() < weights[pointIndex])
+                    meanIndex = pointIndex; 
+            }
+            for(int i = 0; i < dim; i++)
                 means[currDist][i] = data[i][meanIndex];
             currDist++;
         }
