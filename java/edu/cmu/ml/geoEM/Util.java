@@ -19,7 +19,21 @@ public abstract class Util {
         return s;
     }
     
+    public static double[] doubleObjectToPrimitiveArray(Double[] arr) {
+    	double[] primArr = new double[arr.length];
+		for(int i = 0; i < arr.length; i++)
+			primArr[i] = arr[i].doubleValue();
+		return primArr;
+    }
+    
     public static String matricesToString(RealMatrix[] arr) {
+        String s = "";
+        for(RealMatrix M : arr)
+            s += "Matrix:\n" + arrayToString(M.getData()) + "\n";
+        return s;
+    }
+    
+    public static String matricesToString(ArrayList<RealMatrix> arr) {
         String s = "";
         for(RealMatrix M : arr)
             s += "Matrix:\n" + arrayToString(M.getData()) + "\n";
@@ -37,6 +51,23 @@ public abstract class Util {
         RealMatrix[] arrCopy = new RealMatrix[arr.length];
         for(int i = 0; i < arr.length; i++)
             arrCopy[i] = arr[i].copy();
+        return arrCopy;
+    }
+    
+    public static ArrayList<Double[]> deepcopyArray(ArrayList<Double[]> arr) {
+    	ArrayList<Double[]> arrCopy = new ArrayList<Double[]>();
+    	for(int i = 0; i < arr.size(); i++) {
+    		arrCopy.add(new Double[arr.get(0).length]);
+    		System.arraycopy(arr.get(i), 0, arrCopy.get(i), 
+    				0, arr.get(0).length);
+    	}
+        return arrCopy;
+    }
+
+    public static ArrayList<RealMatrix> deepcopyMatrix(ArrayList<RealMatrix> arr) {
+    	ArrayList<RealMatrix> arrCopy = new ArrayList<RealMatrix>();
+        for(int i = 0; i < arr.size(); i++)
+            arrCopy.add(arr.get(i).copy());
         return arrCopy;
     }
     
