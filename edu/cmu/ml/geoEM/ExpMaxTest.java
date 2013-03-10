@@ -1,20 +1,43 @@
 package edu.cmu.ml.geoEM;
 
 import static org.junit.Assert.*;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
 import org.junit.Test;
 
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 
 
-public class MultiExpMaxDataTest {
+public class ExpMaxTest {
+	private static double epsilon = 10.0;
 	
-	private static boolean compare(double[][] actual, 
-			double[][] model) {
-		return MultiExpMax.calcDiff(actual, model) < actual[0][0] * 0.1;
+	@Test
+	public void testDistributionUniform() {
+		double[][] dists = new double[][]
+				{{0.25, 0.25, 0.25, 0.25},
+				 {1.0, 0, 0, 0},
+				 {0.5, 0.3, 0.2, 0.1},
+				 {0.3, 0.2, 0.25, 0.25}};
+		assertTrue(ExpMax.distributionUniform(dists[0]));
+		assertTrue(!ExpMax.distributionUniform(dists[1]));
+		assertTrue(!ExpMax.distributionUniform(dists[2]));
+		assertTrue(ExpMax.distributionUniform(dists[3]));
 	}
+
+	private static boolean compareArrays(ArrayList<Double[]> curr, double[][] old) {
+        if(curr.size() != old.length)
+        	return false;
+        double diff = 0;
+        for(int i = 0; i < curr.size(); i++)
+            for(int j = 0; j < curr.get(i).length; j++)
+            	diff += curr.get(i)[j] - old[i][j];
+        return diff < epsilon;
+    }
 	
-	public void testRun(int numDist, int numPoints) {
+	private void testRun(int numDist, int numPoints) {
 		int dim = 2;
 		double[][] data = new double[dim][numDist * numPoints];
 		int currPoint = 0;
@@ -36,16 +59,16 @@ public class MultiExpMaxDataTest {
 				currPoint++;
 			}
 		}
-		MultiExpMax em = new MultiExpMax(data, numDist);
+		ExpMax em = new ExpMax(data,numDist, numDist);
 		System.out.println("\nEm with k=" + numDist 
 				   + " and n=" + numPoints);
 		em.calculateParameters();
 		System.out.println("Actual means:\n"
 				   + Util.arrayToString(means));
-		assert(compare(em.means, means));
+		assertTrue(compareArrays(em.means, means));
 	}
 	
-	public void testRunCloseClusters(int numDist, int numPoints) {
+	private void testRunCloseClusters(int numDist, int numPoints) {
 		int dim = 2;
 		double[][] data = new double[dim][numDist * numPoints];
 		int currPoint = 0;
@@ -71,16 +94,16 @@ public class MultiExpMaxDataTest {
 				currPoint++;
 			}
 		}
-		MultiExpMax em = new MultiExpMax(data, numDist);
+		ExpMax em = new ExpMax(data,numDist, numDist);
 		System.out.println("\nEm with k=" + numDist 
 						   + " and n=" + numPoints);
 		em.calculateParameters();
 		System.out.println("Actual means:\n"
 				   + Util.arrayToString(means));
-		assert(compare(em.means, means));
+		assertTrue(compareArrays(em.means, means));
 	}
 	
-	public void testRunSmallCov(int numDist, int numPoints) {
+	private void testRunSmallCov(int numDist, int numPoints) {
 		int dim = 2;
 		double[][] data = new double[dim][numDist * numPoints];
 		int currPoint = 0;
@@ -102,13 +125,13 @@ public class MultiExpMaxDataTest {
 				currPoint++;
 			}
 		}
-		MultiExpMax em = new MultiExpMax(data, numDist);
+		ExpMax em = new ExpMax(data,numDist, numDist);
 		System.out.println("\nEm with k=" + numDist 
 				   + " and n=" + numPoints);
 		em.calculateParameters();
 		System.out.println("Actual means:\n"
 				   + Util.arrayToString(means));
-		assert(compare(em.means, means));
+		assertTrue(compareArrays(em.means, means));
 	}
 	
 	@Test
@@ -118,11 +141,6 @@ public class MultiExpMaxDataTest {
 		testRun(4, 100);
 		testRun(5, 100);
 		testRun(10, 100);
-		/*
-		testRun(15, 100); // 100-200 iterations and ~20 seconds
-		testRun(20, 100); // 100-200 iterations and ~30 seconds
-		testRun(25, 100); // 150-200 iterations & ~90 seconds
-		*/
 	}
 	
 	@Test
@@ -151,4 +169,12 @@ public class MultiExpMaxDataTest {
 		testRunSmallCov(2, 10);
 		testRunSmallCov(3, 10);
 	}
+	
+	@Test
+    public void testToronto() throws IOException {
+        double[][] data = Util.importFile("data\\toronto_data.txt");
+    	ExpMax em = new ExpMax(data, 5, 5);
+    	em.calculateParameters();
+        
+    }
 }

@@ -7,22 +7,24 @@ import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 
-public class MultiExpMaxExpLearn
+public class ExpMax
 {
-    public double[][] data; // {{x-coordinates}, {y-coordinates}}
-    public int dim;
-    public int minDist;
-    public int maxDist;
-    public int numPoints;
+    private double[][] data; // {{x-coordinates}, {y-coordinates}}
+    private int dim;
+    private int minDist;
+    private int maxDist;
+    private int numPoints;
+    
     public ArrayList<Double[]> means;
     public ArrayList<RealMatrix> covs;
+    
     protected static double epsilon = 0.001;
-    protected static int minPointsCluster = 2; // minimum # points in a cluster
+    protected static int minPointsCluster = 2;
+    protected static double covInit = 10.0;
     
     private ArrayList<MultivariateNormalDistribution> dists;
 
-    // k is upper bound
-    public MultiExpMaxExpLearn(double[][] data, int kmin, int kmax) {
+    public ExpMax(double[][] data, int kmin, int kmax) {
         this.data = data;
         dim = data.length;
         minDist = kmin;
@@ -33,36 +35,15 @@ public class MultiExpMaxExpLearn
         initializeCovs();
     }
     
-    private double calculateDistanceSquared(double[] p1, double[] p2) {
+    private double calcDistSq(double[] p1, double[] p2) {
         assert(p1.length == p2.length);
         double sumSquares = 0;
         for(int i = 0; i < p1.length; i++)
             sumSquares += Math.pow((p1[i] - p2[i]), 2.0);
         return sumSquares;
     }
-    
-    private double calculateDistanceSquared(double[] p1, Double[] p2) {
-    	assert(p1.length == p2.length);
-        double sumSquares = 0;
-        for(int i = 0; i < p1.length; i++)
-            sumSquares += Math.pow((p1[i] - p2[i].doubleValue()), 2.0);
-        return sumSquares;
-    }
-    
-    private double calculateDistanceSquared(Double[] p1, double[] p2) {
-    	assert(p1.length == p2.length);
-        double sumSquares = 0;
-        for(int i = 0; i < p1.length; i++)
-            sumSquares += Math.pow((p1[i].doubleValue() - p2[i]), 2.0);
-        return sumSquares;
-    }
-    
-    private double calculateDistanceSquared(Double[] p1, Double[] p2) {
-    	assert(p1.length == p2.length);
-        double sumSquares = 0;
-        for(int i = 0; i < p1.length; i++)
-            sumSquares += Math.pow((p1[i].doubleValue() - p2[i].doubleValue()), 2.0);
-        return sumSquares;
+    private double calcDistSq(double[] p1, Double[] p2) {
+    	return calcDistSq(p1, Util.doubleValues(p2));
     }
     
     protected void initializeMeans() {
@@ -76,36 +57,12 @@ public class MultiExpMaxExpLearn
             means.get(currDist)[i] = data[i][meanIndex];
         currDist++;
         while(currDist < means.size()) {
-        	/* DOESN'T WORK
         	double sumDS = 0;
             for(int i = 0; i < numPoints; i++) {
                 double[] currPoint = new double[dim];
                 for(int j = 0; j < dim; j++)
                     currPoint[j] = data[j][i];
-                weights[i] = calculateDistanceSquared(
-                        currPoint, means.get(currDist - 1));
-                sumDS += weights[i];
-            }
-            for(int i = 0; i < numPoints; i++)
-                weights[i] /= sumDS;
-            double r = Math.random();
-            double partialSum = 0;
-            for(meanIndex = 0; meanIndex < numPoints; meanIndex++) {
-            	partialSum += weights[meanIndex++];
-            	if(partialSum < r)
-            		break;
-            }
-        	weights[meanIndex] = 0;
-        	for(int i = 0; i < dim; i++)
-                means.get(currDist)[i] = data[i][meanIndex];
-            currDist++;
-            */
-        	double sumDS = 0;
-            for(int i = 0; i < numPoints; i++) {
-                double[] currPoint = new double[dim];
-                for(int j = 0; j < dim; j++)
-                    currPoint[j] = data[j][i];
-                weights[i] = calculateDistanceSquared(
+                weights[i] = calcDistSq(
                         currPoint, means.get(currDist - 1));
                 sumDS += weights[i];
             }
@@ -116,7 +73,7 @@ public class MultiExpMaxExpLearn
             while(meanIndex == -1) {
                 int pointIndex = (int)(Math.random() * numPoints);
                 if(Math.random() < weights[pointIndex])
-                    meanIndex = pointIndex; 
+                    meanIndex = pointIndex;
             }
             for(int i = 0; i < dim; i++)
                 means.get(currDist)[i] = data[i][meanIndex];
@@ -130,7 +87,7 @@ public class MultiExpMaxExpLearn
             covs.add(new Array2DRowRealMatrix(new double[dim][dim]));
             for(int r = 0; r < dim; r++)
                 for(int c = 0; c < dim; c++)
-                    if(r == c) covs.get(i).setEntry(r, c, 10.0);
+                    if(r == c) covs.get(i).setEntry(r, c, covInit);
         }
     }
 
@@ -144,7 +101,8 @@ public class MultiExpMaxExpLearn
             oldCovs = Util.deepcopyMatrix(covs);
             calculateHypothesis(calculateExpectation());
             iterations++;
-        } while(compareArrays(means, oldMeans) || compareMatrices(covs, oldCovs));
+        } while(arrayListDifferent(means, oldMeans) || matrixListDifferent(covs, oldCovs));
+        removeDuplicateClusters();
         System.out.println("EM with " + means.size() 
         				   + " clusters complete! Took " 
         				   + iterations + " iterations and "
@@ -154,38 +112,57 @@ public class MultiExpMaxExpLearn
         printParameters();
     }
     
+    private void removeDuplicateClusters() {
+    	if(means.size() > minDist) {
+	        ArrayList<Double[]> newMeans = new ArrayList<Double[]>();
+	        ArrayList<RealMatrix> newCovs = new ArrayList<RealMatrix>();
+	        for(Double[] oldMean : means) {
+	        	boolean duplicateMeans = false;
+	        	for(Double[] newMean : newMeans) {
+	        		if(calcDiff(oldMean, newMean) < 5.0) {
+	        			System.out.println(calcDiff(oldMean, newMean));
+	        			duplicateMeans = true;
+	        			break;
+	        		}
+	        	}
+	        	if(!duplicateMeans) {
+	        		int i = means.indexOf(oldMean);
+	        		newMeans.add(oldMean);
+	        		newCovs.add(covs.get(i));
+	        	}
+	        		
+	        }
+	        means = newMeans;
+	        covs = newCovs;
+    	}
+    }
+    
     public void printParameters() {
     	System.out.println("Means:");
     	for(Double[] d : means)
-    		System.out.println(Arrays.toString(Util.doubleObjectToPrimitiveArray(d)));
+    		System.out.println(Arrays.toString(Util.doubleValues(d)));
         System.out.println("Covariances:\n" + Util.matricesToString(covs));
     }
 
-    protected static boolean compare(double[][] curr, double[][] old) {
-        if(old == null)
-            return true;
+    protected static boolean arraysDifferent(double[][] curr, double[][] old) {
         return calcDiff(curr, old) > epsilon;
     }
 
-    protected static boolean compare(RealMatrix[] curr, RealMatrix[] old) {
-        if(old == null)
-            return true;
+    protected static boolean matricesDifferent(RealMatrix[] curr, RealMatrix[] old) {
         for(int i = 0; i < curr.length; i++)
             if (calcDiff(curr[i].getData(), old[i].getData()) > epsilon)
                 return true;
         return false;
     }
     
-    protected static boolean compareArrays(ArrayList<Double[]> curr, ArrayList<Double[]> old) {
-        if(old == null)
-            return true;
+    protected static boolean arrayListDifferent(ArrayList<Double[]> curr, ArrayList<Double[]> old) {
         for(int i = 0; i < curr.size(); i++)
             if (calcDiff(curr.get(i), old.get(i)) > epsilon)
                 return true;
         return false;
     }
 
-    protected static boolean compareMatrices(ArrayList<RealMatrix> curr, 
+    protected static boolean matrixListDifferent(ArrayList<RealMatrix> curr, 
     		ArrayList<RealMatrix> old) {
         if(old == null)
             return true;
@@ -208,19 +185,11 @@ public class MultiExpMaxExpLearn
             diff += FastMath.pow(curr[i] - old[i], 2.0);
         return FastMath.pow(diff, 0.5);
     }
-    
     protected static double calcDiff(Double[] curr, double[] old) {
-        double diff = 0.0;
-        for(int i = 0; i < curr.length; i++)
-            diff += FastMath.pow(curr[i].doubleValue() - old[i], 2.0);
-        return FastMath.pow(diff, 0.5);
+        return calcDiff(Util.doubleValues(curr), old);
     }
-    
     protected static double calcDiff(Double[] curr, Double[] old) {
-        double diff = 0.0;
-        for(int i = 0; i < curr.length; i++)
-            diff += FastMath.pow(curr[i].doubleValue() - old[i].doubleValue(), 2.0);
-        return FastMath.pow(diff, 0.5);
+    	return calcDiff(Util.doubleValues(curr), Util.doubleValues(old));
     }
 
     protected double[] getPoint(int i) {
@@ -237,19 +206,15 @@ public class MultiExpMaxExpLearn
         return point;
     }
     
-    protected void createDists() {
+    private void createDists() {
     	dists = new ArrayList<MultivariateNormalDistribution>();
     	for(int i = 0; i < means.size(); i++)
     		dists.add(new MultivariateNormalDistribution(
-    				Util.doubleObjectToPrimitiveArray(means.get(i)), 
+    				Util.doubleValues(means.get(i)), 
     				covs.get(i).getData()));
     }
     
-    protected static boolean distributionUniform(Double[] dist) {
-    	return distributionUniform(Util.doubleObjectToPrimitiveArray(dist));
-    }
-    
-    protected static boolean distributionUniform(double[] dist) {
+    public static boolean distributionUniform(double[] dist) {
     	double min = dist[0];
     	double max = 0;
     	for(double d : dist) {
@@ -258,10 +223,13 @@ public class MultiExpMaxExpLearn
     		else if(d > max)
     			max = d;
     	}
-    	return max < 2 * min;
+    	return max < 1.5 * min;
     }
-    
-    protected ArrayList<Double[]> calculateExpectation() {
+    public static boolean distributionUniform(Double[] dist) {
+    	return distributionUniform(Util.doubleValues(dist));
+    }
+
+    private ArrayList<Double[]> calculateExpectation() {
         ArrayList<Double[]> expectedValues = new ArrayList<Double[]>();
         createDists();
         for(int i = 0; i < means.size(); i++) {
@@ -287,7 +255,7 @@ public class MultiExpMaxExpLearn
 	                        if(r == c)
 	                        	covs.get(covs.size() - 1).setEntry(r, c, 10.0);
 	                dists.add(new MultivariateNormalDistribution(
-	        				Util.doubleObjectToPrimitiveArray(means.get(means.size() - 1)), 
+	        				Util.doubleValues(means.get(means.size() - 1)), 
 	        				covs.get(covs.size() - 1).getData()));
 	        		expectedValues.add(new Double[numPoints]);
 	        		for(int k = 0; k < numPoints; k++)
@@ -323,7 +291,7 @@ public class MultiExpMaxExpLearn
         return expectedValues;
     }
 
-    protected double expectedValuePoint(double[] point, int currDist) {
+    private double expectedValuePoint(double[] point, int currDist) {
         double probCurrDist = probPoint(point, currDist);
         double probAllDist = 0;
         for(int i = 0; i < means.size(); i++)
@@ -344,7 +312,7 @@ public class MultiExpMaxExpLearn
     	return dists.get(currDist).density(point);
     }
     
-    protected void calculateHypothesis(ArrayList<Double[]> expectedValues) {
+    private void calculateHypothesis(ArrayList<Double[]> expectedValues) {
         for(int i = 0; i < means.size(); i++) {
             double totalExp = 0;
             means.set(i, new Double[dim]);

@@ -19,7 +19,7 @@ public abstract class Util {
         return s;
     }
     
-    public static double[] doubleObjectToPrimitiveArray(Double[] arr) {
+    public static double[] doubleValues(Double[] arr) {
     	double[] primArr = new double[arr.length];
 		for(int i = 0; i < arr.length; i++)
 			primArr[i] = arr[i].doubleValue();

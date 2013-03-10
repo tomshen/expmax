@@ -1,7 +1,4 @@
 *.pyc
 *.class
+*.jar
 temp.*
-
-lib
-notes
-data
