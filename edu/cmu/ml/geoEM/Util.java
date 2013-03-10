@@ -3,11 +3,14 @@ import java.io.*;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
-import java.text.DecimalFormat;
 import java.util.*;
+
+import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 import org.apache.commons.math3.linear.*;
+import org.apache.commons.math3.util.FastMath;
 
 public abstract class Util {
+	
     public static String arrayToString(double[][] arr) {
         String s = "";
         for(double[] da : arr) {
@@ -104,48 +107,23 @@ public abstract class Util {
     public static String exportFile(String filename, double[][] data) {
         File outFile = new File(filename);
         BufferedWriter writer = null;
-        try
-        {
+        try {
             writer = new BufferedWriter(new FileWriter(outFile));
             writer.write(arrayToString(data));
         }
-        catch ( IOException e)
-        {
+        catch (IOException e) {
             System.out.println("Could not write to " + filename);
         }
-        finally
-        {
-            try
-            {
+        finally {
+            try {
                 if (writer != null)
                     writer.close();
             }
-            catch (IOException e)
-            {
+            catch (IOException e) {
                 System.out.println("Could not close writer for " + filename);
             }
          }
          return filename;
-    }
-    
-    public static double round(double d, int i) {
-        String s = "#.";
-        while(i-- > 0)
-            s += "#";
-        DecimalFormat twoDForm = new DecimalFormat(s);
-        return Double.valueOf(twoDForm.format(d));
-    }
-    
-    public static void roundArray(double[][] arr) {
-        for(int i = 0; i < arr.length; i++)
-            for(int j = 0; j < arr[0].length; j++)
-                arr[i][j] = round(arr[i][j], 3);
-    }
-    
-    public static void roundArray(double[][] arr, int d) {
-        for(int i = 0; i < arr.length; i++)
-            for(int j = 0; j < arr[0].length; j++)
-                arr[i][j] = round(arr[i][j], d);
     }
     
     public static double[] toArray(ArrayList<Double> al) {
@@ -155,4 +133,64 @@ public abstract class Util {
             arr[i++] = d;
         return arr;
     }
+
+	/**
+	 * @param  p1 the first array
+	 * @param  p2 the second array
+	 * @return the distance between p1 and p2
+	 */
+	public static double distance(double[][] p1, double[][] p2) {
+		double diff = 0.0;
+		for(int i = 0; i < p1.length; i++)
+			diff += Util.distanceSquared(p1[i], p2[i]);
+		return FastMath.pow(diff, 0.5);
+	}
+
+	/**
+	 * @param  p1 the first point
+	 * @param  p2 the second point
+	 * @return the Euclidean distance between p1 and p2
+	 */
+	public static double distance(double[] p1, double[] p2) {
+	    double diff = 0.0;
+	    for(int i = 0; i < p1.length; i++)
+	        diff += FastMath.pow(p1[i] - p2[i], 2.0);
+	    return FastMath.pow(diff, 0.5);
+	}
+
+	/** @see #distance distance */
+	public static double distance(Double[] p1, Double[] p2) {
+		return distance(doubleValues(p1), doubleValues(p2));
+	}
+
+	/**
+	 * @param  p1 the first point
+	 * @param  p2 the second point
+	 * @return the square of the Euclidean distance between p1 and p2
+	 */
+	public static double distanceSquared(double[] p1, double[] p2) {
+	    double sumSquares = 0;
+	    for(int i = 0; i < p1.length; i++)
+	        sumSquares += Math.pow((p1[i] - p2[i]), 2.0);
+	    return sumSquares;
+	}
+
+	/** @see #distanceSquared distanceSquared */
+	public static double distanceSquared(double[] p1, Double[] p2) {
+		return distanceSquared(p1, doubleValues(p2));
+	}
+
+	/**
+	 * @param point
+	 * @param mean the mean for the distribution
+	 * @param cov the covariance for the distribution
+	 * @return the probability the point belongs to the distribution defined by
+	 * the given mean and the given covariance
+	 */
+	public static double probPoint(double[] point, 
+	                               double[] mean, RealMatrix cov) {
+	    MultivariateNormalDistribution dist = 
+	        new MultivariateNormalDistribution(mean, cov.getData());
+	    return dist.density(point);
+	}
 }

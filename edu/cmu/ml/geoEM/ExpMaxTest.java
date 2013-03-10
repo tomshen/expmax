@@ -7,25 +7,11 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
-import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 
 
 public class ExpMaxTest {
 	private static double epsilon = 10.0;
-	
-	@Test
-	public void testDistributionUniform() {
-		double[][] dists = new double[][]
-				{{0.25, 0.25, 0.25, 0.25},
-				 {1.0, 0, 0, 0},
-				 {0.5, 0.3, 0.2, 0.1},
-				 {0.3, 0.2, 0.25, 0.25}};
-		assertTrue(ExpMax.distributionUniform(dists[0]));
-		assertTrue(!ExpMax.distributionUniform(dists[1]));
-		assertTrue(!ExpMax.distributionUniform(dists[2]));
-		assertTrue(ExpMax.distributionUniform(dists[3]));
-	}
 
 	private static boolean compareArrays(ArrayList<Double[]> curr, double[][] old) {
         if(curr.size() != old.length)
