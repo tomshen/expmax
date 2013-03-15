@@ -25,7 +25,9 @@ public class ExpMax
     /** the distributions for each cluster */
     private ArrayList<MultivariateNormalDistribution> dists;
     /** a constant used to test for distribution uniformity */
-    private double uniformityConstant = 1.5;
+    private double uniformityConstant = 2.0;
+    /** minimum probability for point to be considered to belong to cluster */
+    private double probEpsilon = 0.05;
     
     public ArrayList<Double[]> means;
     public ArrayList<RealMatrix> covs;
@@ -43,7 +45,7 @@ public class ExpMax
         minClusters = kmin;
         maxClusters = kmax;
         numPoints = data[0].length;
-        minPointsCluster = numPoints / maxClusters;
+        minPointsCluster = Math.max(2, numPoints / 100);
         initializeMeans();
         initializeCovs();
     }
@@ -160,7 +162,11 @@ public class ExpMax
                 boolean duplicateMeans = false;
                 for(Double[] newMean : newMeans) {
                     if(Util.distance(oldMean, newMean) < meanEpsilon) {
-                        System.out.println(Util.distance(oldMean, newMean));
+                        System.err.println("DUPLICATE DIST: " 
+                                + Arrays.toString(oldMean));
+                        // average the two means
+                        for(int i = 0; i < newMean.length; i++)
+                            newMean[i] = (newMean[i] + oldMean[i]) / 2;
                         duplicateMeans = true;
                         break;
                     }
@@ -313,13 +319,13 @@ public class ExpMax
                 Double[] probs = expectedValues.get(currDist);
                 int pointsCluster = 0;
                 for(int i = 0; i < numPoints; i++) {
-                    if(probs[i] > epsilon)
+                    if(probs[i] > probEpsilon)
                         pointsCluster++;
                 }
                 if(pointsCluster < minPointsCluster) {
                     if(expectedValues.size() <= minClusters)
                         break;
-                    System.err.println("REMOVING DIST");
+                    System.err.println("REMOVING DIST: " + pointsCluster);
                     means.remove(currDist);
                     covs.remove(currDist);
                     dists.remove(currDist);

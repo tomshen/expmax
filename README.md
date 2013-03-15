@@ -8,3 +8,5 @@ for matrices and implementation of distributions.
 
 ## Known Issues
 * Does not work with an unknown number of means
+  * Consider checking for "large" covariance matrices--uncommon in real data,
+  common in the model

@@ -46,7 +46,7 @@ public class ExpMaxTest {
                 currPoint++;
             }
         }
-        ExpMax em = new ExpMax(data, numDist, numDist);
+        ExpMax em = new ExpMax(data, numDist / 2, 2 * numDist);
         System.out.println("\nEm with k=" + numDist 
                    + " and n=" + numPoints);
         em.calculateParameters();
@@ -81,7 +81,7 @@ public class ExpMaxTest {
                 currPoint++;
             }
         }
-        ExpMax em = new ExpMax(data, numDist, numDist);
+        ExpMax em = new ExpMax(data, numDist / 2, 2 * numDist);
         System.out.println("\nEm with k=" + numDist 
                            + " and n=" + numPoints);
         em.calculateParameters();
@@ -112,7 +112,7 @@ public class ExpMaxTest {
                 currPoint++;
             }
         }
-        ExpMax em = new ExpMax(data, numDist, numDist);
+        ExpMax em = new ExpMax(data, numDist / 2, 2 * numDist);
         System.out.println("\nEm with k=" + numDist 
                    + " and n=" + numPoints);
         em.calculateParameters();
