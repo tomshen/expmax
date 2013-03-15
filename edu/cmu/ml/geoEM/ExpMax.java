@@ -33,7 +33,7 @@ public class ExpMax
     /**
      * Initializes parameters for a run of the algorithm.
      * @param  data the coordinates with rows for the dimensions of the data,
-     * 				and columns for the actual data points
+     *              and columns for the actual data points
      * @param  kmin the minimum number of clusters allowed
      * @param  kmax the maximum number of clusters allowed
      */
@@ -64,7 +64,7 @@ public class ExpMax
      * @see "Machine Learning, by Tom Mitchell, pp. 191-3"
      */
     public void calculateParameters() {
-    	ArrayList<Double[]> oldMeans;
+        ArrayList<Double[]> oldMeans;
         ArrayList<RealMatrix> oldCovs;
         int iterations = 0;
         long startTime = System.currentTimeMillis();
@@ -74,14 +74,14 @@ public class ExpMax
             calculateHypothesis(calculateExpectation());
             iterations++;
         } while(arrayListDifferent(means, oldMeans) 
-        	 || matrixListDifferent(covs, oldCovs));
+             || matrixListDifferent(covs, oldCovs));
         removeDuplicateClusters();
         System.out.println("EM with " + means.size() 
-        				   + " clusters complete! Took " 
-        				   + iterations + " iterations and "
-        				   + Double.toString((System.currentTimeMillis() 
-        						   			 - startTime) / 1000.0)
-        				   + " seconds");
+                           + " clusters complete! Took " 
+                           + iterations + " iterations and "
+                           + Double.toString((System.currentTimeMillis() 
+                                             - startTime) / 1000.0)
+                           + " seconds");
         printParameters();
     }
     
@@ -89,9 +89,9 @@ public class ExpMax
      * Prints the model means and covariances of the clusters.
      */
     public void printParameters() {
-    	System.out.println("Means:");
-    	for(Double[] d : means)
-    		System.out.println(Arrays.toString(Util.doubleValues(d)));
+        System.out.println("Means:");
+        for(Double[] d : means)
+            System.out.println(Arrays.toString(Util.doubleValues(d)));
         System.out.println("Covariances:\n" + Util.matricesToString(covs));
     }
     
@@ -102,7 +102,7 @@ public class ExpMax
     private void initializeMeans() {
         means = new ArrayList<Double[]>();
         for(int i = 0; i < minClusters; i++)
-        	means.add(new Double[dim]);
+            means.add(new Double[dim]);
         int currDist = 0;
         double[] weights = new double[numPoints];
         int meanIndex = (int)(Math.random() * numPoints);
@@ -110,7 +110,7 @@ public class ExpMax
             means.get(currDist)[i] = data[i][meanIndex];
         currDist++;
         while(currDist < means.size()) {
-        	double sumDS = 0;
+            double sumDS = 0;
             for(int i = 0; i < numPoints; i++) {
                 double[] currPoint = new double[dim];
                 for(int j = 0; j < dim; j++)
@@ -139,7 +139,7 @@ public class ExpMax
      * {@link #dim} by dim and diagonal, with {@link #covInit} as its entries.
      */
     private void initializeCovs() {
-    	covs = new ArrayList<RealMatrix>();
+        covs = new ArrayList<RealMatrix>();
         for(int i = 0; i < minClusters; i++) {
             covs.add(new Array2DRowRealMatrix(new double[dim][dim]));
             for(int r = 0; r < dim; r++)
@@ -153,28 +153,28 @@ public class ExpMax
      * each other.
      */
     private void removeDuplicateClusters() {
-    	if(means.size() > minClusters) {
-	        ArrayList<Double[]> newMeans = new ArrayList<Double[]>();
-	        ArrayList<RealMatrix> newCovs = new ArrayList<RealMatrix>();
-	        for(Double[] oldMean : means) {
-	        	boolean duplicateMeans = false;
-	        	for(Double[] newMean : newMeans) {
-	        		if(Util.distance(oldMean, newMean) < meanEpsilon) {
-	        			System.out.println(Util.distance(oldMean, newMean));
-	        			duplicateMeans = true;
-	        			break;
-	        		}
-	        	}
-	        	if(!duplicateMeans) {
-	        		int i = means.indexOf(oldMean);
-	        		newMeans.add(oldMean);
-	        		newCovs.add(covs.get(i));
-	        	}
-	        		
-	        }
-	        means = newMeans;
-	        covs = newCovs;
-    	}
+        if(means.size() > minClusters) {
+            ArrayList<Double[]> newMeans = new ArrayList<Double[]>();
+            ArrayList<RealMatrix> newCovs = new ArrayList<RealMatrix>();
+            for(Double[] oldMean : means) {
+                boolean duplicateMeans = false;
+                for(Double[] newMean : newMeans) {
+                    if(Util.distance(oldMean, newMean) < meanEpsilon) {
+                        System.out.println(Util.distance(oldMean, newMean));
+                        duplicateMeans = true;
+                        break;
+                    }
+                }
+                if(!duplicateMeans) {
+                    int i = means.indexOf(oldMean);
+                    newMeans.add(oldMean);
+                    newCovs.add(covs.get(i));
+                }
+                    
+            }
+            means = newMeans;
+            covs = newCovs;
+        }
     }
 
     /**
@@ -182,9 +182,9 @@ public class ExpMax
      * the corresponding array in the other list, or true otherwise
      */
     private boolean arrayListDifferent(ArrayList<Double[]> curr, 
-    		ArrayList<Double[]> old) {
+            ArrayList<Double[]> old) {
         for(int i = 0; i < curr.size(); i++)
-            if (Util.distance(curr.get(i), old.get(i)) > epsilon)
+            if(Util.distance(curr.get(i), old.get(i)) > epsilon)
                 return true;
         return false;
     }
@@ -193,9 +193,9 @@ public class ExpMax
      * the corresponding matrix in the other list, or true otherwise
      */
     private boolean matrixListDifferent(ArrayList<RealMatrix> curr, 
-    		ArrayList<RealMatrix> old) {
+            ArrayList<RealMatrix> old) {
         for(int i = 0; i < curr.size(); i++)
-            if (Util.distance(curr.get(i).getData(), old.get(i).getData()) > epsilon)
+            if(Util.distance(curr.get(i).getData(), old.get(i).getData()) > epsilon)
                 return true;
         return false;
     }
@@ -225,11 +225,11 @@ public class ExpMax
      * {@link #means} and {@link #covs covariances}, stored in {@link #dists}.
      */
     private void createDists() {
-    	dists = new ArrayList<MultivariateNormalDistribution>();
-    	for(int i = 0; i < means.size(); i++)
-    		dists.add(new MultivariateNormalDistribution(
-    				Util.doubleValues(means.get(i)), 
-    				covs.get(i).getData()));
+        dists = new ArrayList<MultivariateNormalDistribution>();
+        for(int i = 0; i < means.size(); i++)
+            dists.add(new MultivariateNormalDistribution(
+                    Util.doubleValues(means.get(i)), 
+                    covs.get(i).getData()));
     }
     
     /**
@@ -240,15 +240,15 @@ public class ExpMax
      * @return if the distribution is uniform
      */
     private boolean distributionUniform(double[] dist) {
-    	double min = dist[0];
-    	double max = 0;
-    	for(double d : dist) {
-    		if(d < min)
-    			min = d;
-    		else if(d > max)
-    			max = d;
-    	}
-    	return max < uniformityConstant * min;
+        double min = dist[0];
+        double max = 0;
+        for(double d : dist) {
+            if(d < min)
+                min = d;
+            else if(d > max)
+                max = d;
+        }
+        return max < uniformityConstant * min;
     }
     
     /**
@@ -272,61 +272,61 @@ public class ExpMax
         ArrayList<Double[]> expectedValues = new ArrayList<Double[]>();
         createDists();
         for(int i = 0; i < means.size(); i++) {
-        	expectedValues.add(new Double[numPoints]);
-        	for(int j = 0; j < numPoints; j++) 
+            expectedValues.add(new Double[numPoints]);
+            for(int j = 0; j < numPoints; j++) 
                 expectedValues.get(i)[j] = expectedValuePoint(getPoint(j), i);
         }
         int oldSize = expectedValues.size();
         if(expectedValues.size() < maxClusters) {
-	    	for(int i = 0 ; i < numPoints; i++) {
-	    		if(expectedValues.size() >= maxClusters)
-	    			break;
-	    		double[] dist = new double[expectedValues.size()];
-	    		for(int j = 0; j < expectedValues.size(); j++) {
-	    			dist[j] = expectedValues.get(j)[i].doubleValue();
-	    		}
-	    		if(distributionUniform(dist)) {
-	    			System.err.println("ADDING DIST");
-	    			means.add(getPointObj(i));
-	    			covs.add(new Array2DRowRealMatrix(new double[dim][dim]));
-	                for(int r = 0; r < dim; r++)
-	                    for(int c = 0; c < dim; c++)
-	                        if(r == c)
-	                        	covs.get(covs.size() - 1).setEntry(r, c, covInit);
-	                dists.add(new MultivariateNormalDistribution(
-	        				Util.doubleValues(means.get(means.size() - 1)), 
-	        				covs.get(covs.size() - 1).getData()));
-	        		expectedValues.add(new Double[numPoints]);
-	        		for(int c = 0; c < means.size(); c++)
-		        		for(int k = 0; k < numPoints; k++)
-		        			expectedValues.get(c)[k] = 
-		                    	expectedValuePoint(getPoint(k), c);
-	        		for(Double[] da : expectedValues)
-	        			da[i] = 0.0;
-	        		expectedValues.get(expectedValues.size() - 1)[i] = 1.0;
-	    		}
-	    	}
+            for(int i = 0 ; i < numPoints; i++) {
+                if(expectedValues.size() >= maxClusters)
+                    break;
+                double[] dist = new double[expectedValues.size()];
+                for(int j = 0; j < expectedValues.size(); j++) {
+                    dist[j] = expectedValues.get(j)[i].doubleValue();
+                }
+                if(distributionUniform(dist)) {
+                    System.err.println("ADDING DIST");
+                    means.add(getPointObj(i));
+                    covs.add(new Array2DRowRealMatrix(new double[dim][dim]));
+                    for(int r = 0; r < dim; r++)
+                        for(int c = 0; c < dim; c++)
+                            if(r == c)
+                                covs.get(covs.size() - 1).setEntry(r, c, covInit);
+                    dists.add(new MultivariateNormalDistribution(
+                            Util.doubleValues(means.get(means.size() - 1)), 
+                            covs.get(covs.size() - 1).getData()));
+                    expectedValues.add(new Double[numPoints]);
+                    for(int c = 0; c < means.size(); c++)
+                        for(int k = 0; k < numPoints; k++)
+                            expectedValues.get(c)[k] = 
+                                expectedValuePoint(getPoint(k), c);
+                    for(Double[] da : expectedValues)
+                        da[i] = 0.0;
+                    expectedValues.get(expectedValues.size() - 1)[i] = 1.0;
+                }
+            }
         }
         if(expectedValues.size() > oldSize) {
-	    	int currDist = 0;
-	    	while(currDist < expectedValues.size()) {
-	    		Double[] probs = expectedValues.get(currDist);
-	    		int pointsCluster = 0;
-	    		for(int i = 0; i < numPoints; i++) {
-	    			if(probs[i] > epsilon)
-	    				pointsCluster++;
-	    		}
-	    		if(pointsCluster < minPointsCluster) {
-	    			if(expectedValues.size() <= minClusters)
-	    				break;
-	    			System.err.println("REMOVING DIST");
-	    			means.remove(currDist);
-	    			covs.remove(currDist);
-	    			dists.remove(currDist);
-	    			expectedValues.remove(currDist);
-	    		}
-	    		else currDist++;
-	    	}
+            int currDist = 0;
+            while(currDist < expectedValues.size()) {
+                Double[] probs = expectedValues.get(currDist);
+                int pointsCluster = 0;
+                for(int i = 0; i < numPoints; i++) {
+                    if(probs[i] > epsilon)
+                        pointsCluster++;
+                }
+                if(pointsCluster < minPointsCluster) {
+                    if(expectedValues.size() <= minClusters)
+                        break;
+                    System.err.println("REMOVING DIST");
+                    means.remove(currDist);
+                    covs.remove(currDist);
+                    dists.remove(currDist);
+                    expectedValues.remove(currDist);
+                }
+                else currDist++;
+            }
         }
         return expectedValues;
     }
@@ -357,7 +357,7 @@ public class ExpMax
      * @see #expectedValuePoint(double[], int) expectedValuePoint
      */
     private double probPoint(double[] point, int currDist) {
-    	return dists.get(currDist).density(point);
+        return dists.get(currDist).density(point);
     }
     
     /**
@@ -380,9 +380,9 @@ public class ExpMax
                 totalExp += expectedValues.get(i)[j];
             covs.set(i, new Array2DRowRealMatrix(new double[dim][dim]));
             for(int d = 0; d < dim; d++) {
-            	means.get(i)[d] = 0.0;
+                means.get(i)[d] = 0.0;
                 for(int j = 0; j < numPoints; j++) {
-                	means.get(i)[d] += expectedValues.get(i)[j] * data[d][j];
+                    means.get(i)[d] += expectedValues.get(i)[j] * data[d][j];
                 }
                     
                 means.get(i)[d] /= totalExp;

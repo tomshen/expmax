@@ -10,7 +10,7 @@ import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.util.FastMath;
 
 public abstract class Util {
-	
+    
     public static String arrayToString(double[][] arr) {
         String s = "";
         for(double[] da : arr) {
@@ -23,10 +23,10 @@ public abstract class Util {
     }
     
     public static double[] doubleValues(Double[] arr) {
-    	double[] primArr = new double[arr.length];
-		for(int i = 0; i < arr.length; i++)
-			primArr[i] = arr[i].doubleValue();
-		return primArr;
+        double[] primArr = new double[arr.length];
+        for(int i = 0; i < arr.length; i++)
+            primArr[i] = arr[i].doubleValue();
+        return primArr;
     }
     
     public static String matricesToString(RealMatrix[] arr) {
@@ -58,17 +58,17 @@ public abstract class Util {
     }
     
     public static ArrayList<Double[]> deepcopyArray(ArrayList<Double[]> arr) {
-    	ArrayList<Double[]> arrCopy = new ArrayList<Double[]>();
-    	for(int i = 0; i < arr.size(); i++) {
-    		arrCopy.add(new Double[arr.get(0).length]);
-    		System.arraycopy(arr.get(i), 0, arrCopy.get(i), 
-    				0, arr.get(0).length);
-    	}
+        ArrayList<Double[]> arrCopy = new ArrayList<Double[]>();
+        for(int i = 0; i < arr.size(); i++) {
+            arrCopy.add(new Double[arr.get(0).length]);
+            System.arraycopy(arr.get(i), 0, arrCopy.get(i), 
+                    0, arr.get(0).length);
+        }
         return arrCopy;
     }
 
     public static ArrayList<RealMatrix> deepcopyMatrix(ArrayList<RealMatrix> arr) {
-    	ArrayList<RealMatrix> arrCopy = new ArrayList<RealMatrix>();
+        ArrayList<RealMatrix> arrCopy = new ArrayList<RealMatrix>();
         for(int i = 0; i < arr.size(); i++)
             arrCopy.add(arr.get(i).copy());
         return arrCopy;
@@ -134,63 +134,63 @@ public abstract class Util {
         return arr;
     }
 
-	/**
-	 * @param  p1 the first array
-	 * @param  p2 the second array
-	 * @return the distance between p1 and p2
-	 */
-	public static double distance(double[][] p1, double[][] p2) {
-		double diff = 0.0;
-		for(int i = 0; i < p1.length; i++)
-			diff += Util.distanceSquared(p1[i], p2[i]);
-		return FastMath.pow(diff, 0.5);
-	}
+    /**
+     * @param  p1 the first array
+     * @param  p2 the second array
+     * @return the distance between p1 and p2
+     */
+    public static double distance(double[][] p1, double[][] p2) {
+        double diff = 0.0;
+        for(int i = 0; i < p1.length; i++)
+            diff += Util.distanceSquared(p1[i], p2[i]);
+        return FastMath.pow(diff, 0.5);
+    }
 
-	/**
-	 * @param  p1 the first point
-	 * @param  p2 the second point
-	 * @return the Euclidean distance between p1 and p2
-	 */
-	public static double distance(double[] p1, double[] p2) {
-	    double diff = 0.0;
-	    for(int i = 0; i < p1.length; i++)
-	        diff += FastMath.pow(p1[i] - p2[i], 2.0);
-	    return FastMath.pow(diff, 0.5);
-	}
+    /**
+     * @param  p1 the first point
+     * @param  p2 the second point
+     * @return the Euclidean distance between p1 and p2
+     */
+    public static double distance(double[] p1, double[] p2) {
+        double diff = 0.0;
+        for(int i = 0; i < p1.length; i++)
+            diff += FastMath.pow(p1[i] - p2[i], 2.0);
+        return FastMath.pow(diff, 0.5);
+    }
 
-	/** @see #distance distance */
-	public static double distance(Double[] p1, Double[] p2) {
-		return distance(doubleValues(p1), doubleValues(p2));
-	}
+    /** @see #distance distance */
+    public static double distance(Double[] p1, Double[] p2) {
+        return distance(doubleValues(p1), doubleValues(p2));
+    }
 
-	/**
-	 * @param  p1 the first point
-	 * @param  p2 the second point
-	 * @return the square of the Euclidean distance between p1 and p2
-	 */
-	public static double distanceSquared(double[] p1, double[] p2) {
-	    double sumSquares = 0;
-	    for(int i = 0; i < p1.length; i++)
-	        sumSquares += Math.pow((p1[i] - p2[i]), 2.0);
-	    return sumSquares;
-	}
+    /**
+     * @param  p1 the first point
+     * @param  p2 the second point
+     * @return the square of the Euclidean distance between p1 and p2
+     */
+    public static double distanceSquared(double[] p1, double[] p2) {
+        double sumSquares = 0;
+        for(int i = 0; i < p1.length; i++)
+            sumSquares += Math.pow((p1[i] - p2[i]), 2.0);
+        return sumSquares;
+    }
 
-	/** @see #distanceSquared distanceSquared */
-	public static double distanceSquared(double[] p1, Double[] p2) {
-		return distanceSquared(p1, doubleValues(p2));
-	}
+    /** @see #distanceSquared distanceSquared */
+    public static double distanceSquared(double[] p1, Double[] p2) {
+        return distanceSquared(p1, doubleValues(p2));
+    }
 
-	/**
-	 * @param point
-	 * @param mean the mean for the distribution
-	 * @param cov the covariance for the distribution
-	 * @return the probability the point belongs to the distribution defined by
-	 * the given mean and the given covariance
-	 */
-	public static double probPoint(double[] point, 
-	                               double[] mean, RealMatrix cov) {
-	    MultivariateNormalDistribution dist = 
-	        new MultivariateNormalDistribution(mean, cov.getData());
-	    return dist.density(point);
-	}
+    /**
+     * @param point
+     * @param mean the mean for the distribution
+     * @param cov the covariance for the distribution
+     * @return the probability the point belongs to the distribution defined by
+     * the given mean and the given covariance
+     */
+    public static double probPoint(double[] point, 
+                                   double[] mean, RealMatrix cov) {
+        MultivariateNormalDistribution dist = 
+            new MultivariateNormalDistribution(mean, cov.getData());
+        return dist.density(point);
+    }
 }
