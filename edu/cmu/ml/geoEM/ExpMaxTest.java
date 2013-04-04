@@ -2,6 +2,7 @@ package edu.cmu.ml.geoEM;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -12,6 +13,8 @@ import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 
 public class ExpMaxTest {
     private static double epsilon = 10.0;
+    private static String dataDirectory = "data";
+    private static String resultsDirectory = "results";
 
     private static boolean compareArrays(ArrayList<Double[]> curr, 
             double[][] old) {
@@ -157,11 +160,37 @@ public class ExpMaxTest {
         testRunSmallCov(3, 10);
     }
     
-    @Test
-    public void testToronto() throws IOException {
-        double[][] data = Util.importFile("data\\toronto_data.txt");
-        ExpMax em = new ExpMax(data, 2, 10);
+    public void testData(String locationType, String locationName) throws IOException {
+        String filepath = File.separator + locationType + File.separator 
+                + locationName;
+        double[][] data = Util.importFile(dataDirectory + filepath + ".data");
+        ExpMax em = new ExpMax(data, 10, 40);
         em.calculateParameters();
-        
+        em.exportParameters(resultsDirectory + filepath + ".results");
+    }
+    
+    @Test
+    public void testLocationData() throws IOException {
+        String[] cities = new String[] {
+                "Yorkshire_(disambiguation)", 
+                "Bermuda_(disambiguation)", 
+                "Newcastle", 
+                "Aberdeen_(disambiguation)", 
+                "Camden", 
+                "Erie_(disambiguation)", 
+                "San_Antonio_(disambiguation)", 
+                "San_Juan"};
+        String[] counties = new String[] {
+                "Lake_County",
+                "Marion_County",
+                "Montgomery_County",
+                "Monroe_County",
+                "Carroll_County",
+                "Grant_County"
+        };
+        for(String c : counties) {
+            System.out.println(c);
+            testData("county", c);
+        }
     }
 }

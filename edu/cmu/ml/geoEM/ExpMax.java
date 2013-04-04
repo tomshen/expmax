@@ -1,9 +1,13 @@
 package edu.cmu.ml.geoEM;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
+import org.apache.commons.math3.exception.MaxCountExceededException;
+import org.apache.commons.math3.stat.correlation.Covariance;
 
 public class ExpMax
 {
@@ -14,18 +18,16 @@ public class ExpMax
     private int numPoints;
     /** how close parameters from successive iterations need to be for the
      *  algorithm to terminate */
-    private double epsilon = 0.001;
+    private double epsilon = 0.0001;
     /** the minimum number of points for a cluster be considered one */
     private int minPointsCluster = 2;
     /** the value to initialize the covariance matrices' diagonals to */
-    private double covInit = 10.0;
+    private double covInit = 1.0;
     /** how close means for two clusters need to be to be considered duplicate
      *  clusters */
-    private double meanEpsilon = 5.0;
+    private double meanEpsilon = 0.5;
     /** the distributions for each cluster */
     private ArrayList<MultivariateNormalDistribution> dists;
-    /** a constant used to test for distribution uniformity */
-    private double uniformityConstant = 2.0;
     /** minimum probability for point to be considered to belong to cluster */
     private double probEpsilon = 0.05;
     
@@ -45,7 +47,7 @@ public class ExpMax
         minClusters = kmin;
         maxClusters = kmax;
         numPoints = data[0].length;
-        minPointsCluster = Math.max(2, numPoints / 100);
+        minPointsCluster = Math.max(2, numPoints / Math.max(100, kmax));
         initializeMeans();
         initializeCovs();
     }
@@ -74,10 +76,11 @@ public class ExpMax
             oldMeans = Util.deepcopyArray(means);
             oldCovs = Util.deepcopyMatrix(covs);
             calculateHypothesis(calculateExpectation());
+            removeDuplicateClusters();
             iterations++;
-        } while(arrayListDifferent(means, oldMeans) 
+        } while(means.size() != oldMeans.size()
+             || arrayListDifferent(means, oldMeans)
              || matrixListDifferent(covs, oldCovs));
-        removeDuplicateClusters();
         System.out.println("EM with " + means.size() 
                            + " clusters complete! Took " 
                            + iterations + " iterations and "
@@ -95,6 +98,18 @@ public class ExpMax
         for(Double[] d : means)
             System.out.println(Arrays.toString(Util.doubleValues(d)));
         System.out.println("Covariances:\n" + Util.matricesToString(covs));
+    }
+    
+    /**
+     * Exports the model means and covariances to a file.
+     * @throws IOException 
+     */
+    public void exportParameters(String filepath) throws IOException {
+        String text = "Means:\n";
+        for(Double[] d : means)
+            text += (Arrays.toString(Util.doubleValues(d))) + "\n";
+        text += "\nCovariances:\n" + Util.matricesToString(covs);
+        Util.writeFile(filepath, text);
     }
     
     /**
@@ -135,6 +150,43 @@ public class ExpMax
             currDist++;
         }
     }
+    /**
+     * Add a cluster by choosing a random point from the data set to be the
+     * mean, with weights based on the k-means++ algorithm, and a shiny new
+     * non-singular covariance matrix.
+     * @see #createDists()
+     */
+    private void replaceCluster(int currDist, double covInit) {
+        double[] weights = new double[numPoints];
+        double sumDS = 0;
+        int compMeanIndex = currDist - 1; // the mean compared to
+        if(compMeanIndex < 0) {
+            compMeanIndex = (int) ((means.size() - 1.0) * Math.random());
+        }
+        for(int i = 0; i < numPoints; i++) {
+            double[] currPoint = new double[dim];
+            for(int j = 0; j < dim; j++)
+                currPoint[j] = data[j][i];
+            weights[i] = Util.distanceSquared(
+                    currPoint, means.get(compMeanIndex));
+            sumDS += weights[i];
+        }
+        for(int i = 0; i < numPoints; i++)
+            weights[i] /= sumDS;
+
+        int meanIndex = -1;
+        while(meanIndex == -1) {
+            int pointIndex = (int)(Math.random() * numPoints);
+            if(Math.random() < weights[pointIndex])
+                meanIndex = pointIndex;
+        }
+        for(int i = 0; i < dim; i++)
+            means.get(currDist)[i] = data[i][meanIndex];
+        // create a new covariance matrix
+        for(int r = 0; r < dim; r++)
+            for(int c = 0; c < dim; c++)
+                if(r == c) covs.get(currDist).setEntry(r, c, covInit);
+    }
 
     /**
      * Initializes {@link #minClusters} covariance matrices. Each matrix is a
@@ -150,6 +202,10 @@ public class ExpMax
         }
     }
     
+    private boolean areDuplicates(int d1, int d2) {
+        return Util.MahalanobisDistance(means.get(d1), covs.get(d1), means.get(d2)) < meanEpsilon;
+    }
+    
     /**
      * Removes any clusters that have means within {@link #meanEpsilon} of 
      * each other.
@@ -158,23 +214,27 @@ public class ExpMax
         if(means.size() > minClusters) {
             ArrayList<Double[]> newMeans = new ArrayList<Double[]>();
             ArrayList<RealMatrix> newCovs = new ArrayList<RealMatrix>();
-            for(Double[] oldMean : means) {
+            for(int i = 0; i < means.size(); i++) {
+                Double[] oldMean = means.get(i);
+                RealMatrix oldCov = covs.get(i);
                 boolean duplicateMeans = false;
-                for(Double[] newMean : newMeans) {
-                    if(Util.distance(oldMean, newMean) < meanEpsilon) {
+                for(int j = 0; j < newMeans.size(); j++) {
+                    Double[] newMean = means.get(j);
+                    RealMatrix newCov = covs.get(j);
+                    if(areDuplicates(i, j)) {
                         System.err.println("DUPLICATE DIST: " 
                                 + Arrays.toString(oldMean));
-                        // average the two means
-                        for(int i = 0; i < newMean.length; i++)
-                            newMean[i] = (newMean[i] + oldMean[i]) / 2;
+                        // average the two duplicate means
+                        for(int k = 0; k < newMean.length; k++)
+                            newMean[k] = (newMean[k] + oldMean[k]) / 2;
                         duplicateMeans = true;
                         break;
                     }
                 }
                 if(!duplicateMeans) {
-                    int i = means.indexOf(oldMean);
+                    int l = means.indexOf(oldMean);
                     newMeans.add(oldMean);
-                    newCovs.add(covs.get(i));
+                    newCovs.add(covs.get(l));
                 }
                     
             }
@@ -232,29 +292,59 @@ public class ExpMax
      */
     private void createDists() {
         dists = new ArrayList<MultivariateNormalDistribution>();
-        for(int i = 0; i < means.size(); i++)
-            dists.add(new MultivariateNormalDistribution(
-                    Util.doubleValues(means.get(i)), 
-                    covs.get(i).getData()));
+        int currDist = 0;
+        int i = 0;
+        while(currDist < means.size()) {
+            if(i > 100) {
+                System.err.println("Too many cluster replacements.");
+                System.exit(1);
+            }
+            try {
+                dists.add(new MultivariateNormalDistribution(
+                        Util.doubleValues(means.get(currDist)), 
+                        covs.get(currDist).getData()));
+                currDist++;
+                i = 0;
+            }
+            catch(SingularMatrixException
+                 |MaxCountExceededException
+                 |NonPositiveDefiniteMatrixException ex) {
+                replaceCluster(currDist, covInit * i++);
+                System.err.println("REPLACING DIST: "  + 
+                        Arrays.toString(means.get(currDist)));
+            }
+        }
     }
     
     /**
      * Checks if the distribution is uniform by seeing if the maximum value in
-     * the distribution is less than {@link #uniformityConstant} times the
-     * minimum value.
+     * the distribution using the MinMax criterion.
      * @param dist the distribution to check for uniformity
      * @return if the distribution is uniform
      */
-    private boolean distributionUniform(double[] dist) {
+    private boolean distributionUniformMinMax(double[] dist) {
         double min = dist[0];
         double max = 0;
         for(double d : dist) {
-            if(d < min)
-                min = d;
-            else if(d > max)
-                max = d;
+            if(d < min) min = d;
+            if(d > max) max = d;
         }
-        return max < uniformityConstant * min;
+        return (max < 2.0 * min) && (max < 2.0 / dist.length);
+    }
+    
+    /**
+     * Checks if the distribution is uniform by seeing if the maximum value in
+     * the distribution using the Jensen-Shannon Divergence criterion.
+     * @param dist the distribution to check for uniformity
+     * @return if the distribution is uniform
+     * @see Util#JensenShannonDivergence(double[], double[]) JensenShannonDivergence
+     */
+    private boolean distributionUniformJS(double[] dist) {
+        double[] uniform = new double[dist.length];
+        double c = 1.0 / dist.length;
+        for(int i = 0; i < dist.length; i++)
+            uniform[i] = c;
+        return Util.JensenShannonDivergence(uniform, dist) < c;
     }
     
     /**
@@ -272,17 +362,17 @@ public class ExpMax
      * to the probabilities of points belonging to that cluster
      * @see #createDists() createDists
      * @see #expectedValuePoint(double[], int) expectedValuePoint
-     * @see #distributionUniform(double[]) distributionUniform
+     * @see #distributionUniformMinMax(double[]) distributionUniform
      */
     private ArrayList<Double[]> calculateExpectation() {
         ArrayList<Double[]> expectedValues = new ArrayList<Double[]>();
+        int oldSize = expectedValues.size();
         createDists();
         for(int i = 0; i < means.size(); i++) {
             expectedValues.add(new Double[numPoints]);
             for(int j = 0; j < numPoints; j++) 
                 expectedValues.get(i)[j] = expectedValuePoint(getPoint(j), i);
         }
-        int oldSize = expectedValues.size();
         if(expectedValues.size() < maxClusters) {
             for(int i = 0 ; i < numPoints; i++) {
                 if(expectedValues.size() >= maxClusters)
@@ -291,9 +381,10 @@ public class ExpMax
                 for(int j = 0; j < expectedValues.size(); j++) {
                     dist[j] = expectedValues.get(j)[i].doubleValue();
                 }
-                if(distributionUniform(dist)) {
-                    System.err.println("ADDING DIST");
-                    means.add(getPointObj(i));
+                if(distributionUniformJS(dist)) {
+                    Double[] newMean = getPointObj(i);
+                    System.err.println("ADDING DIST: " + Arrays.toString(newMean));
+                    means.add(newMean);
                     covs.add(new Array2DRowRealMatrix(new double[dim][dim]));
                     for(int r = 0; r < dim; r++)
                         for(int c = 0; c < dim; c++)
@@ -397,13 +488,19 @@ public class ExpMax
                 for(int c = 0; c < dim; c++) {
                     double entry = 0;
                     for(int j = 0; j < numPoints; j++) {
-                        entry += (expectedValues.get(i)[j]
+                        entry += ((expectedValues.get(i)[j])
                                 * (data[r][j] - means.get(i)[r])
                                 * (data[c][j] - means.get(i)[c]));
                     }
                     entry = (entry / totalExp) * numPoints / (numPoints - 1);
                     covs.get(i).setEntry(r, c, entry);
                 }
+            }
+            if(Double.isNaN(means.get(0)[0])) {
+                means = new ArrayList<Double[]>();
+                covs = new ArrayList<RealMatrix>();
+                initializeMeans();
+                initializeCovs();
             }
         }
     }

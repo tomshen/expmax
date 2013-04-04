@@ -2,3 +2,10 @@
 *.class
 *.jar
 temp.*
+
+archive
+data
+doc
+lib
+notes
+results

@@ -14,4 +14,33 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<filteredResources>
+		<filter>
+			<id>1365050225714</id>
+			<name></name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-archive</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1365050225718</id>
+			<name></name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-notes</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1365050225722</id>
+			<name></name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-true-.*\.py</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>
