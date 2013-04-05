@@ -78,13 +78,20 @@ def plot_seeds(key):
     util.plot_points(util.rearrange_data(get_seed_coords(key)))
 
 def add_to_test_data(key, location_type):
-    coords = util.rearrange_data(get_data_coords(key))
-    filename = key + '.data'
+    data_coords = util.rearrange_data(get_data_coords(key))
+    data_filename = key + '.data'
     if not os.path.exists(os.path.join(DATA_DIRECTORY, location_type)):
         os.makedirs(os.path.join(DATA_DIRECTORY, location_type))
-    filepath = os.path.join(DATA_DIRECTORY, os.path.join(location_type, filename))
-    with open(filepath, 'w+') as f:
-        f.write(str(coords).replace('], [', '\n').replace('[[', '').replace(']]', '').replace(', ', ' '))
+    data_filepath = os.path.join(DATA_DIRECTORY, os.path.join(location_type, data_filename))
+    with open(data_filepath, 'w+') as f:
+        f.write(str(data_coords).replace('], [', '\n').replace('[[', '').replace(']]', '').replace(', ', ' '))
+    seed_coords = util.rearrange_data(util.rearrange_data(get_seed_coords(key)))
+    seed_filename = key + '.seeds'
+    if not os.path.exists(os.path.join(DATA_DIRECTORY, location_type)):
+        os.makedirs(os.path.join(DATA_DIRECTORY, location_type))
+    seed_filepath = os.path.join(DATA_DIRECTORY, os.path.join(location_type, seed_filename))
+    with open(seed_filepath, 'w+') as f:
+        f.write(str(seed_coords).replace('], [', '\n').replace('[[', '').replace(']]', '').replace(', ', ' '))
 
 def write_with_stats(locations, filename):
     seeds = get_seed_keys() # dict
@@ -97,6 +104,9 @@ def write_with_stats(locations, filename):
             f.write(c[0] + ' (' + c[1] + '): ' + str(c[2]) + ' seeds, ' + str(c[3]) + ' data points\n')
 
 def main():
+    with open(os.path.join(DATA_DIRECTORY, 'region.txt')) as f:
+        for line in f:
+            add_to_test_data(line.strip(), 'region')
     print 'Used to process data sources.'
 
 if __name__ == "__main__":

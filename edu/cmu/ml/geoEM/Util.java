@@ -14,6 +14,20 @@ import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.util.FastMath;
 
 public abstract class Util {
+    public static String dataDirectory = "data";
+    public static String resultsDirectory = "results";
+    
+    public static String getFilepath(String type,
+            String locationType, String locationName, String fileExtension) {
+        String fileSuffix = File.separator + locationType 
+                + File.separator + locationName + fileExtension;
+        if(type == "data")
+            return dataDirectory + fileSuffix;
+        else if(type == "results")
+            return resultsDirectory + fileSuffix;
+        else
+            return "";
+    }
     
     public static String arrayToString(double[][] arr) {
         String s = "[";
@@ -275,5 +289,8 @@ public abstract class Util {
     }
     public static double MahalanobisDistance(Double[] mean, RealMatrix cov, Double[] point) {
         return MahalanobisDistance(doubleValues(mean), cov, doubleValues(point));
+    }
+    public static double MahalanobisDistance(Double[] mean, RealMatrix cov, double[] point) {
+        return MahalanobisDistance(doubleValues(mean), cov, point);
     }
 }

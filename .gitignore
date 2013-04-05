@@ -3,9 +3,8 @@
 *.jar
 temp.*
 
-archive
-data
-doc
-lib
-notes
-results
+archive/
+data/
+lib/
+notes/
+results/

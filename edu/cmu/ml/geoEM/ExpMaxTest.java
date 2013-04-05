@@ -13,8 +13,6 @@ import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 
 public class ExpMaxTest {
     private static double epsilon = 10.0;
-    private static String dataDirectory = "data";
-    private static String resultsDirectory = "results";
 
     private static boolean compareArrays(ArrayList<Double[]> curr, 
             double[][] old) {
@@ -160,13 +158,17 @@ public class ExpMaxTest {
         testRunSmallCov(3, 10);
     }
     
-    public void testData(String locationType, String locationName) throws IOException {
+    public void testData(String locationType, String locationName, int i) throws IOException {
         String filepath = File.separator + locationType + File.separator 
                 + locationName;
-        double[][] data = Util.importFile(dataDirectory + filepath + ".data");
-        ExpMax em = new ExpMax(data, 10, 40);
+        double[][] data = Util.importFile(
+                Util.getFilepath("data", locationType, locationName, ".data"));
+        ExpMax em = new ExpMax(data, i, 40, locationName, locationType);
         em.calculateParameters();
-        em.exportParameters(resultsDirectory + filepath + ".results");
+        Util.writeFile(Util.getFilepath("results", locationType, locationName, ".comp"),
+                em.compareToSeed());
+        em.exportParameters(
+                Util.getFilepath("results", locationType, locationName, ".results"));
     }
     
     @Test
@@ -188,9 +190,16 @@ public class ExpMaxTest {
                 "Carroll_County",
                 "Grant_County"
         };
-        for(String c : counties) {
+        
+        for(String c : cities) {
             System.out.println(c);
-            testData("county", c);
+            if(c == "Carroll_County" || c == "Grant_County"
+                    || c == "Marion_County") {
+                testData("city", c, 10);
+            }
+            else {
+                testData("city", c, 15);
+            }
         }
     }
 }

@@ -31,7 +31,7 @@ def load_results_file(location_type, location_name):
         return means, covs
 
 def main():
-    location_type = 'county'
+    location_type = 'city'
     for city in open(os.path.join(util.DATA_DIRECTORY, location_type + '.txt')):
         location = city.strip()
         model_means, model_covs = load_results_file(location_type, location)

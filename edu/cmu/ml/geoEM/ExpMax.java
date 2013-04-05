@@ -1,5 +1,6 @@
 package edu.cmu.ml.geoEM;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
@@ -11,6 +12,11 @@ import org.apache.commons.math3.stat.correlation.Covariance;
 
 public class ExpMax
 {
+    /**
+     * the name of the data set
+     */
+    public String name;
+    private String locationType;
     private double[][] data;
     private int dim;   
     private int minClusters;
@@ -18,14 +24,14 @@ public class ExpMax
     private int numPoints;
     /** how close parameters from successive iterations need to be for the
      *  algorithm to terminate */
-    private double epsilon = 0.0001;
+    private double epsilon = 0.01;
     /** the minimum number of points for a cluster be considered one */
     private int minPointsCluster = 2;
     /** the value to initialize the covariance matrices' diagonals to */
     private double covInit = 1.0;
     /** how close means for two clusters need to be to be considered duplicate
      *  clusters */
-    private double meanEpsilon = 0.5;
+    private double meanEpsilon = 0.25;
     /** the distributions for each cluster */
     private ArrayList<MultivariateNormalDistribution> dists;
     /** minimum probability for point to be considered to belong to cluster */
@@ -40,9 +46,34 @@ public class ExpMax
      *              and columns for the actual data points
      * @param  kmin the minimum number of clusters allowed
      * @param  kmax the maximum number of clusters allowed
+     * @param  name the name of the data set being analyzed
      */
+    public ExpMax(double[][] data, int kmin, int kmax, String name) {
+        this.data = data;
+        this.name = name;
+        dim = data.length;
+        minClusters = kmin;
+        maxClusters = kmax;
+        numPoints = data[0].length;
+        minPointsCluster = Math.max(2, numPoints / Math.max(100, kmax));
+        initializeMeans();
+        initializeCovs();
+    }
     public ExpMax(double[][] data, int kmin, int kmax) {
         this.data = data;
+        this.name = "[UNKNOWN]";
+        dim = data.length;
+        minClusters = kmin;
+        maxClusters = kmax;
+        numPoints = data[0].length;
+        minPointsCluster = Math.max(2, numPoints / Math.max(100, kmax));
+        initializeMeans();
+        initializeCovs();
+    }
+    public ExpMax(double[][] data, int kmin, int kmax, String name, String locationType) {
+        this.data = data;
+        this.name = name;
+        this.locationType = locationType;
         dim = data.length;
         minClusters = kmin;
         maxClusters = kmax;
@@ -81,8 +112,8 @@ public class ExpMax
         } while(means.size() != oldMeans.size()
              || arrayListDifferent(means, oldMeans)
              || matrixListDifferent(covs, oldCovs));
-        System.out.println("EM with " + means.size() 
-                           + " clusters complete! Took " 
+        System.out.println("EM on " + name + " data complete! " + means.size() 
+                           + " clusters found. Took " 
                            + iterations + " iterations and "
                            + Double.toString((System.currentTimeMillis() 
                                              - startTime) / 1000.0)
@@ -110,6 +141,40 @@ public class ExpMax
             text += (Arrays.toString(Util.doubleValues(d))) + "\n";
         text += "\nCovariances:\n" + Util.matricesToString(covs);
         Util.writeFile(filepath, text);
+    }
+    
+    public String compareToSeed() throws IOException {
+        try {
+            String comparisonInfo = "";
+            int clustersCloseToSeeds = 0;
+            double[][] seeds = Util.importFile(
+                    Util.getFilepath("data", locationType, name, ".seeds"));
+            for(double[] seed : seeds) {
+                double min = 10000000;
+                int closestCluster = -1;
+                for(int i = 0; i < means.size(); i++) {
+                    double dist = Util.MahalanobisDistance(means.get(i), covs.get(i), seed);
+                    if(dist < min) {
+                        min = dist;
+                        closestCluster = i;
+                    }
+                }
+                comparisonInfo += (Arrays.toString(seed) + " is closest to "
+                        + Arrays.toString(means.get(closestCluster)) + " at a distance of "
+                        + min + ". This is " +
+                        (min < meanEpsilon ? "close." : "not close.")) + "\n";
+                if(min < meanEpsilon) {
+                    clustersCloseToSeeds++;
+                }
+            }
+            comparisonInfo += ("Matched " + clustersCloseToSeeds 
+                    + " seeds to clusters out of " + seeds.length 
+                    + " seeds and " + means.size() + " clusters.");
+            return comparisonInfo;
+        }
+        catch(Exception e) {
+            return e.toString();
+        }
     }
     
     /**
@@ -296,7 +361,7 @@ public class ExpMax
         int i = 0;
         while(currDist < means.size()) {
             if(i > 100) {
-                System.err.println("Too many cluster replacements.");
+                System.err.println("Too many cluster replacements for " + name);
                 System.exit(1);
             }
             try {
