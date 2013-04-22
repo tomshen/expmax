@@ -1,11 +1,9 @@
 package edu.cmu.ml.geoEM;
 
+import java.io.*;
+import java.util.*;
+
 import static org.junit.Assert.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-
 import org.junit.Test;
 
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
@@ -163,7 +161,7 @@ public class ExpMaxTest {
                 + locationName;
         double[][] data = Util.importFile(
                 Util.getFilepath("data", locationType, locationName, ".data"));
-        ExpMax em = new ExpMax(data, i, 40, locationName, locationType);
+        ExpMax em = new ExpMax(data, i, 50, locationName, locationType);
         em.calculateParameters();
         Util.writeFile(Util.getFilepath("results", locationType, locationName, ".comp"),
                 em.compareToSeed());
@@ -175,7 +173,7 @@ public class ExpMaxTest {
     public void testLocationData() throws IOException {
         String[] cities = new String[] {
                 "Yorkshire_(disambiguation)", 
-                "Bermuda_(disambiguation)", 
+                "Bermuda_(disambiguation)",
                 "Newcastle", 
                 "Aberdeen_(disambiguation)", 
                 "Camden", 
@@ -193,13 +191,7 @@ public class ExpMaxTest {
         
         for(String c : cities) {
             System.out.println(c);
-            if(c == "Carroll_County" || c == "Grant_County"
-                    || c == "Marion_County") {
-                testData("city", c, 10);
-            }
-            else {
-                testData("city", c, 15);
-            }
+            testData("city", c, 15);
         }
     }
 }

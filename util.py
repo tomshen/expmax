@@ -47,7 +47,6 @@ def plot_data_model(title, data, model_means, model_covs, show=True, filepath=''
     plt.imshow(im, extent=[-180, 180, -90, 90])
     plt.scatter(data[1], data[0], c='r', marker='o')
     centers = rearrange_data(model_means)
-    plt.scatter(centers[1], centers[0], c='b', marker='s')
     for i in xrange(len(model_means)):
         points = list(np.random.multivariate_normal(mean=model_means[i], cov=model_covs[i], size=10000))
         mean = model_means[i]
@@ -55,8 +54,10 @@ def plot_data_model(title, data, model_means, model_covs, show=True, filepath=''
         cov = [[y, x] for [x, y] in model_covs[i]]
         cov.reverse()
         plot_cov_ellipse(cov, mean, nstd=2, alpha=0.5, color='green')
+    plt.scatter(centers[1], centers[0], c='b', marker='s')
     if filepath:
         savefig(filepath, bbox_inches=0)
+        plt.clf()
     if show:
         plt.show()
 

@@ -104,10 +104,14 @@ def write_with_stats(locations, filename):
             f.write(c[0] + ' (' + c[1] + '): ' + str(c[2]) + ' seeds, ' + str(c[3]) + ' data points\n')
 
 def main():
+    print sorted(get_data_coords('Bermuda_(disambiguation)'))
+    plot_data('Bermuda_(disambiguation)')
+    """
     with open(os.path.join(DATA_DIRECTORY, 'region.txt')) as f:
         for line in f:
             add_to_test_data(line.strip(), 'region')
     print 'Used to process data sources.'
+    """
 
 if __name__ == "__main__":
     main()

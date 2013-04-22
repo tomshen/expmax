@@ -30,14 +30,23 @@ def load_results_file(location_type, location_name):
         assert(len(covs) == len(means))
         return means, covs
 
-def main():
-    location_type = 'city'
+def generate_location_results_plots(location_type):
     for city in open(os.path.join(util.DATA_DIRECTORY, location_type + '.txt')):
         location = city.strip()
+        print 'Currently processing', location
         model_means, model_covs = load_results_file(location_type, location)
         data = util.rearrange_data(process_data.get_data_coords(location))
         filepath = os.path.join(RESULTS_DIRECTORY, os.path.join(location_type, location + '.png'))
         util.plot_data_model(location, data, model_means, model_covs, False, filepath)
+
+def main():
+    generate_location_results_plots('city')
+    """
+    location = 'Bermuda_(disambiguation)'
+    model_means, model_covs = load_results_file('city', location)
+    data = util.rearrange_data(process_data.get_data_coords(location))
+    util.plot_data_model(location, data, model_means, model_covs, True)
+    """
 
 if __name__ == '__main__':
     main()

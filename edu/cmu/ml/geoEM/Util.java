@@ -3,13 +3,11 @@ import java.io.*;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.*;
 
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
+import org.apache.commons.math3.exception.*;
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.util.FastMath;
 
@@ -292,5 +290,26 @@ public abstract class Util {
     }
     public static double MahalanobisDistance(Double[] mean, RealMatrix cov, double[] point) {
         return MahalanobisDistance(doubleValues(mean), cov, point);
+    }
+    
+    /**
+     * Checks if the given matrix is positive semi-definite and non-singular.
+     * @param M covariance matrix to check
+     * @return true iff M is positive semi-definite and non-singular
+     */
+    public static boolean isValidCovarianceMatrix(RealMatrix M) {
+        try {
+            EigenDecomposition ed = new EigenDecomposition(M);
+            double[] realEigen = ed.getRealEigenvalues();
+            double[] imagEigen = ed.getImagEigenvalues();
+            for(int i = 0; i < realEigen.length; i++)
+                if(realEigen[i] < 0 || (realEigen[i] == 0 && imagEigen[i] == 0))
+                    return false;
+            return true;  
+        }
+        catch(MaxCountExceededException | MathArithmeticException ex) {
+            return false;
+        }
+
     }
 }
