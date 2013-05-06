@@ -102,8 +102,8 @@ public class ExpMax
         int iterations = 0;
         long startTime = System.currentTimeMillis();
         do {
-            if(iterations > 10000) {
-                System.err.println("Too many iterations.");
+            if(iterations > 250) {
+                System.err.println(name + ": too many iterations.");
                 System.exit(1);
             }
             oldMeans = Util.deepcopyArray(means);
@@ -150,12 +150,15 @@ public class ExpMax
             String comparisonInfo = "";
             int clustersCloseToSeeds = 0;
             double[][] seeds = Util.importFile(
-                    Util.getFilepath("data", locationType, name, ".seeds"));
+                    Util.getFilepath("data", locationType, name, ".clusters"));
             for(double[] seed : seeds) {
                 double min = 10000000;
                 int closestCluster = -1;
                 for(int i = 0; i < means.size(); i++) {
-                    double dist = Util.MahalanobisDistance(means.get(i), covs.get(i), seed);
+                    //double dist = Util.MahalanobisDistance(means.get(i), covs.get(i), seed);
+                    double dist = Util.distance(Util.doubleValues(means.get(i)), seed);
+                    System.err.println(Arrays.toString(seed) + " " 
+                    + Arrays.toString(means.get(i)) + " " + dist);
                     if(dist < min) {
                         min = dist;
                         closestCluster = i;
@@ -164,8 +167,8 @@ public class ExpMax
                 comparisonInfo += (Arrays.toString(seed) + " is closest to "
                         + Arrays.toString(means.get(closestCluster)) + " at a distance of "
                         + min + ". This is " +
-                        (min < meanEpsilon ? "close." : "not close.")) + "\n";
-                if(min < meanEpsilon) {
+                        (min < 5 ? "close." : "not close.")) + "\n";
+                if(min < 5) {
                     clustersCloseToSeeds++;
                 }
             }
@@ -202,9 +205,14 @@ public class ExpMax
                 double[] currPoint = new double[dim];
                 for(int j = 0; j < dim; j++)
                     currPoint[j] = data[j][i];
-                if(weights[i] != 0)
-                    weights[i] = Util.distanceSquared(
-                            currPoint, means.get(currDist - 1));
+                double minDistSq = 1000000000000.0;
+                for(int j = 0; j < currDist; j++) {
+                    double distSq = Util.distanceSquared(
+                            currPoint, means.get(j));
+                    if(distSq < minDistSq)
+                        minDistSq = distSq;
+                }
+                weights[i] = minDistSq;
                 sumDS += weights[i];
             }
             for(int i = 0; i < numPoints; i++)
@@ -239,8 +247,13 @@ public class ExpMax
             double[] currPoint = new double[dim];
             for(int j = 0; j < dim; j++)
                 currPoint[j] = data[j][i];
-            weights[i] = Util.distanceSquared(
-                    currPoint, means.get(compMeanIndex));
+            double minDistSq = 1000000000000.0;
+            for(Double[] mean : means) {
+                double distSq = Util.distanceSquared(currPoint, mean);
+                if(distSq < minDistSq)
+                    minDistSq = distSq;
+            }
+            weights[i] = minDistSq;
             sumDS += weights[i];
         }
         for(int i = 0; i < numPoints; i++)
@@ -253,7 +266,7 @@ public class ExpMax
         }
         for(int i = 0; i < dim; i++)
             means.get(currDist)[i] = data[i][meanIndex];
-        // create a new covariance matrix
+        // overwrite old covariance matrix with a new covariance matrix
         for(int r = 0; r < dim; r++)
             for(int c = 0; c < dim; c++) {
                 if(r == c)
@@ -365,7 +378,7 @@ public class ExpMax
     private boolean covarianceTooLarge(int currDist) {
         for(int i = 0; i < dim; i++)
             for(int j = 0; j < dim; j++)
-                if(FastMath.abs(covs.get(currDist).getEntry(i, j)) > 2500)
+                if(FastMath.abs(covs.get(currDist).getEntry(i, j)) > 1000)
                     return true;
         return false;
     }
@@ -379,7 +392,7 @@ public class ExpMax
         int currDist = 0;
         int i = 1;
         while(currDist < means.size()) {
-            if(i > 500) {
+            if(i > 100) {
                 System.err.println("TOO MANY CLUSTER REPLACEMENTS: " + name);
                 System.exit(1);
             }
@@ -564,6 +577,13 @@ public class ExpMax
             means.set(i, new Double[dim]);
             for(int j = 0; j < numPoints; j++)
                 totalExp += expectedValues.get(i)[j];
+            if(totalExp == 0) {
+                System.err.println("RESETTING ALL DISTS");
+                means = new ArrayList<Double[]>();
+                covs = new ArrayList<RealMatrix>();
+                initializeMeans();
+                initializeCovs();
+            }
             covs.set(i, new Array2DRowRealMatrix(new double[dim][dim]));
             for(int d = 0; d < dim; d++) {
                 means.get(i)[d] = 0.0;
@@ -589,13 +609,6 @@ public class ExpMax
                 replaceCluster(i, covInit);
                 System.err.println("REPLACING DIST: "  + 
                         Arrays.toString(means.get(i)) + " cov too large");
-            }
-            if(Double.isNaN(means.get(0)[0])) {
-                System.err.println("RESETTING ALL DISTS");
-                means = new ArrayList<Double[]>();
-                covs = new ArrayList<RealMatrix>();
-                initializeMeans();
-                initializeCovs();
             }
             if(!Util.isValidCovarianceMatrix(covs.get(i))) {
                 replaceCluster(i, covInit);

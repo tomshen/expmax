@@ -26,6 +26,12 @@ public abstract class Util {
         else
             return "";
     }
+
+    public static String getResultsFilepath(String type,
+            String locationType, String locationName, String fileExtension) {
+        return resultsDirectory + File.separator + type + File.separator
+                + locationType + File.separator + locationName + fileExtension;
+    }
     
     public static String arrayToString(double[][] arr) {
         String s = "[";
@@ -283,7 +289,7 @@ public abstract class Util {
         for(int i = 0; i < diff.length; i++)
             diff[i] = point[i] - mean[i];
         Array2DRowRealMatrix v = new Array2DRowRealMatrix(diff);
-        return FastMath.sqrt(v.transpose().multiply(cov.multiply(v)).getEntry(0,0));
+        return FastMath.sqrt((v.transpose()).multiply(cov.multiply(v)).getEntry(0,0));
     }
     public static double MahalanobisDistance(Double[] mean, RealMatrix cov, Double[] point) {
         return MahalanobisDistance(doubleValues(mean), cov, doubleValues(point));

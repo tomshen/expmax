@@ -156,12 +156,12 @@ public class ExpMaxTest {
         testRunSmallCov(3, 10);
     }
     
-    public void testData(String locationType, String locationName, int i) throws IOException {
+    public void testData(String locationType, String locationName, int i, int j) throws IOException {
         String filepath = File.separator + locationType + File.separator 
                 + locationName;
         double[][] data = Util.importFile(
                 Util.getFilepath("data", locationType, locationName, ".data"));
-        ExpMax em = new ExpMax(data, i, 50, locationName, locationType);
+        ExpMax em = new ExpMax(data, i, j, locationName, locationType);
         em.calculateParameters();
         Util.writeFile(Util.getFilepath("results", locationType, locationName, ".comp"),
                 em.compareToSeed());
@@ -169,17 +169,41 @@ public class ExpMaxTest {
                 Util.getFilepath("results", locationType, locationName, ".results"));
     }
     
+    public void testDataNoMin(String locationType, String locationName) throws IOException {
+        String filepath = File.separator + locationType + File.separator 
+                + locationName;
+        double[][] data = Util.importFile(
+                Util.getFilepath("data", locationType, locationName, ".data"));
+        ExpMax em = new ExpMax(data, 2, 50, locationName, locationType);
+        em.calculateParameters();
+        Util.writeFile(Util.getResultsFilepath("nomin", locationType, locationName, ".comp"),
+                em.compareToSeed());
+        em.exportParameters(
+                Util.getResultsFilepath("nomin", locationType, locationName, ".results"));
+    }
+    
+    public void testDataFixed(String locationType, String locationName, int i) throws IOException {
+        String filepath = File.separator + locationType + File.separator 
+                + locationName;
+        double[][] data = Util.importFile(
+                Util.getFilepath("data", locationType, locationName, ".data"));
+        ExpMax em = new ExpMax(data, i, i, locationName, locationType);
+        em.calculateParameters();
+        Util.writeFile(Util.getResultsFilepath("fixed", locationType, locationName, ".comp"),
+                em.compareToSeed());
+        em.exportParameters(
+                Util.getResultsFilepath("fixed", locationType, locationName, ".results"));
+    }
+
     @Test
-    public void testLocationData() throws IOException {
+    public void testNoMin() throws IOException {
         String[] cities = new String[] {
                 "Yorkshire_(disambiguation)", 
                 "Bermuda_(disambiguation)",
                 "Newcastle", 
                 "Aberdeen_(disambiguation)", 
                 "Camden", 
-                "Erie_(disambiguation)", 
-                "San_Antonio_(disambiguation)", 
-                "San_Juan"};
+                "Erie_(disambiguation)"};
         String[] counties = new String[] {
                 "Lake_County",
                 "Marion_County",
@@ -188,10 +212,30 @@ public class ExpMaxTest {
                 "Carroll_County",
                 "Grant_County"
         };
-        
         for(String c : cities) {
             System.out.println(c);
-            testData("city", c, 15);
+            testDataNoMin("city", c);
         }
+        
+        for(String c : counties) {
+            System.out.println(c);
+            testDataNoMin("county", c);
+        }
+    }
+    
+    @Test
+    public void testFixed() throws IOException {
+        testDataFixed("city", "Aberdeen_(disambiguation)", 10);
+        testDataFixed("city", "Bermuda_(disambiguation)", 6);
+        testDataFixed("city", "Camden", 21);
+        testDataFixed("city", "Erie_(disambiguation)", 12);
+        testDataFixed("city", "Newcastle", 15);
+        testDataFixed("city", "Yorkshire_(disambiguation)", 6);
+        testDataFixed("county", "Carroll_County", 6);
+        testDataFixed("county", "Grant_County", 5);
+        testDataFixed("county", "Lake_County", 13);
+        testDataFixed("county", "Marion_County", 12);
+        testDataFixed("county", "Monroe_County", 10);
+        testDataFixed("county", "Montgomery_County", 9);
     }
 }

@@ -16,6 +16,13 @@ def get_seed_coords(key):
                 coord_list.append((float(toks[4][1:]), float(toks[5][:toks[5].index('"')])))
     return coord_list
 
+def get_cluster_coords(key, location_type):
+    coord_list = []
+    with open(os.path.join(DATA_DIRECTORY, os.path.join(location_type, key + '.clusters'))) as f:
+        for line in f:
+            coord_list.append([float(c) for c in line.strip().split()])
+    return coord_list
+
 def get_data_coords(key):
     coord_list = []
     with open(os.path.join(DATA_SOURCE, 'clusterSourcesByID.tsv')) as f:
@@ -77,6 +84,17 @@ def plot_data(key):
 def plot_seeds(key):
     util.plot_points(util.rearrange_data(get_seed_coords(key)))
 
+def plot_clusters(key, location_type):
+    util.plot_points(util.rearrange_data(get_cluster_coords(key, location_type)))
+
+def plot_data_seeds(key):
+    util.plot_data_seeds(util.rearrange_data(get_data_coords(key)),
+        util.rearrange_data(get_seed_coords(key)), title=key)
+
+def plot_data_clusters(key, location_type):
+    util.plot_data_seeds(util.rearrange_data(get_data_coords(key)),
+        util.rearrange_data(get_cluster_coords(key, location_type)), title=location_type + ': ' + key)
+
 def add_to_test_data(key, location_type):
     data_coords = util.rearrange_data(get_data_coords(key))
     data_filename = key + '.data'
@@ -104,14 +122,7 @@ def write_with_stats(locations, filename):
             f.write(c[0] + ' (' + c[1] + '): ' + str(c[2]) + ' seeds, ' + str(c[3]) + ' data points\n')
 
 def main():
-    print sorted(get_data_coords('Bermuda_(disambiguation)'))
-    plot_data('Bermuda_(disambiguation)')
-    """
-    with open(os.path.join(DATA_DIRECTORY, 'region.txt')) as f:
-        for line in f:
-            add_to_test_data(line.strip(), 'region')
-    print 'Used to process data sources.'
-    """
+    pass
 
 if __name__ == "__main__":
     main()

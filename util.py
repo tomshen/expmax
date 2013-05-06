@@ -22,7 +22,19 @@ def plot_points(data):
     plt.xlim([-180, 180])
     plt.ylim([-90, 90])
     plt.imshow(im, extent=[-180, 180, -90, 90])
-    plt.plot(data[1], data[0], 'ro')
+    plt.plot(data[1], data[0], 'bo')
+    plt.show()
+
+def plot_data_seeds(data, seeds, title='Data plotted on map of the world'):
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    plt.title(title)
+    im = plt.imread('world.png')
+    plt.xlim([-180, 180])
+    plt.ylim([-90, 90])
+    plt.imshow(im, extent=[-180, 180, -90, 90])
+    plt.plot(data[1], data[0], 'bo')
+    plt.plot(seeds[1], seeds[0], 'gs')
     plt.show()
 
 def plot_compare(title, data1, data2):
@@ -33,8 +45,8 @@ def plot_compare(title, data1, data2):
     plt.xlim([-180, 180])
     plt.ylim([-90, 90])
     plt.imshow(im, extent=[-180, 180, -90, 90])
-    plt.scatter(data1[1], data1[0], c='r', marker='o')
-    plt.scatter(data2[1], data2[0], c='b', marker='s')
+    plt.scatter(data1[1], data1[0], c='b', marker='o')
+    plt.scatter(data2[1], data2[0], c='g', marker='s')
     plt.show()
 
 def plot_data_model(title, data, model_means, model_covs, show=True, filepath=''):
@@ -45,7 +57,7 @@ def plot_data_model(title, data, model_means, model_covs, show=True, filepath=''
     plt.xlim([-180, 180])
     plt.ylim([-90, 90])
     plt.imshow(im, extent=[-180, 180, -90, 90])
-    plt.scatter(data[1], data[0], c='r', marker='o')
+    plt.scatter(data[1], data[0], c='b', marker='o')
     centers = rearrange_data(model_means)
     for i in xrange(len(model_means)):
         points = list(np.random.multivariate_normal(mean=model_means[i], cov=model_covs[i], size=10000))
@@ -54,7 +66,7 @@ def plot_data_model(title, data, model_means, model_covs, show=True, filepath=''
         cov = [[y, x] for [x, y] in model_covs[i]]
         cov.reverse()
         plot_cov_ellipse(cov, mean, nstd=2, alpha=0.5, color='green')
-    plt.scatter(centers[1], centers[0], c='b', marker='s')
+    plt.scatter(centers[1], centers[0], c='y', marker='s')
     if filepath:
         savefig(filepath, bbox_inches=0)
         plt.clf()
